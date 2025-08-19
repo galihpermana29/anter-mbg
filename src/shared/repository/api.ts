@@ -34,15 +34,17 @@ export async function fetchAPI<T>(
 
 export async function fetchAPIWithoutToken<T>(
   url: string, //send /v1/endpoint
-  options?: RequestInit
+  options?: RequestInit,
+  headers?: Record<string, string>
 ): Promise<T> {
-  const headers = {
+  const headersWithoutToken = {
     "Content-Type": "application/json",
+    ...headers,
   };
 
   const response = await fetch(`${API_URl}/api${url}`, {
     ...options,
-    headers,
+    headers: headersWithoutToken,
   });
   const data = await response.json();
 

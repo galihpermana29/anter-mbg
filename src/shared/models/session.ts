@@ -9,3 +9,20 @@ export interface Data {
   user_id: string;
   role: string;
 }
+
+export interface IDetailUserByID {
+  data: IDetailUser;
+  status: string;
+}
+
+export interface IDetailUser {
+  id: string;
+  fullname: string;
+  username: string;
+  role: string;
+  email: string;
+  kitchen_id: string;
+  school_id: string;
+  phone: string;
+  is_active: boolean;
+}

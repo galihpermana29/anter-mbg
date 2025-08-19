@@ -3,11 +3,15 @@ import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { sessionOptions } from "./setup";
 
-import { ILoginResponse } from "../models/session";
+import { IDetailUser, Data } from "../models/session";
+
+export interface ISession extends Data {
+  user?: IDetailUser;
+}
 
 // ADD THE GETSESSION ACTION
 export async function getSession() {
-  const session = await getIronSession<ILoginResponse["data"]>(
+  const session = await getIronSession<ISession>(
     await cookies(),
     sessionOptions
   );
@@ -15,26 +19,32 @@ export async function getSession() {
 }
 
 export async function getSessionString() {
-  const session = await getIronSession<ILoginResponse["data"]>(
+  const session = await getIronSession<ISession>(
     await cookies(),
     sessionOptions
   );
   return JSON.stringify(session);
 }
 
-export async function setSession(newSessionData: ILoginResponse["data"]) {
+export async function setSession(newSessionData: Data, userData?: IDetailUser) {
   let session = await getSession();
+
+  // Set basic session data
   Object.keys(newSessionData).forEach((key) => {
-    session[key as keyof ILoginResponse["data"]] =
-      newSessionData[key as keyof ILoginResponse["data"]];
+    session[key as keyof Data] = newSessionData[key as keyof Data];
   });
+
+  // Set user data if provided
+  if (userData) {
+    session.user = userData;
+  }
 
   await session.save();
 }
 
 export async function setSessionSpecific(value: string, key: string) {
   const session = await getSession();
-  session[key as keyof ILoginResponse["data"]] = value;
+  (session as any)[key] = value;
   await session.save();
 }
 

@@ -1,5 +1,5 @@
 import { ILoginPayload } from "@/shared/models/login";
-import { ILoginResponse } from "@/shared/models/session";
+import { IDetailUserByID, ILoginResponse } from "@/shared/models/session";
 import { fetchAPIWithoutToken } from "@/shared/repository/api";
 import { setSession } from "@/shared/session/getter-session";
 import { useMutation } from "@tanstack/react-query";
@@ -24,8 +24,21 @@ export function useLogin() {
     },
     onSuccess: async (data) => {
       const loginData = data.data;
+
       try {
-        await setSession(loginData);
+        const response = await fetchAPIWithoutToken<IDetailUserByID>(
+          `/v1/users/${loginData.user_id}`,
+          {
+            method: "GET",
+          },
+          {
+            "X-Source": "web",
+            "X-User-Id": loginData.user_id,
+            "X-Kitchen-Id": loginData.kitchen_id,
+            Authorization: `Bearer ${loginData.access_token}`,
+          }
+        );
+        await setSession(loginData, response.data);
         toast.success("Login berhasil");
 
         if (loginData.role === "KITCHEN") {
@@ -33,7 +46,7 @@ export function useLogin() {
         }
 
         if (loginData.role === "SCHOOL") {
-          router.push("/school");
+          router.push("/school/pesanan");
         }
       } catch (error) {
         throw error;

@@ -27,7 +27,7 @@ const LoginPage = () => {
             label="Password"
             rules={[{ required: true, message: "Please input your password!" }]}
           >
-            <Input placeholder="Password" className="!w-full" />
+            <Input.Password placeholder="Password" className="!w-full" />
           </Form.Item>
           <div className="flex items-center justify-center">
             <Button

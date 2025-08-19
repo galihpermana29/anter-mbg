@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { getSessionClient } from "@/shared/session/get-session-client";
 import {
   ShoppingCartOutlined,
   BookOutlined,
@@ -40,7 +41,7 @@ interface CustomMenuItem {
 }
 
 // Define menu items with their corresponding routes
-const menuItems: CustomMenuItem[] = [
+const kitchenMenu: CustomMenuItem[] = [
   {
     label: "Pesanan",
     key: "pesanan",
@@ -61,35 +62,87 @@ const menuItems: CustomMenuItem[] = [
   },
 ];
 
-// Convert the menu items to the format required by Ant Design
-const items: MenuItem[] = menuItems.map((item) => {
-  if (item.children) {
-    return getItem(
-      item.label,
-      item.key,
-      item.icon,
-      item.children.map((child) => getItem(child.label, child.key))
-    );
-  }
-  return getItem(item.label, item.key, item.icon);
-});
+const schoolMenu: CustomMenuItem[] = [
+  {
+    label: "Pesanan",
+    key: "pesanan",
+    icon: <ShoppingCartOutlined />,
+    route: "/school/pesanan",
+  },
+  {
+    label: "Profile Sekolah",
+    key: "sekolah",
+    icon: <BookOutlined />,
+    route: "/school/profile",
+  },
+];
+
+// Convert menu items to the format required by Ant Design
+const convertMenuItems = (menuItems: CustomMenuItem[]): MenuItem[] => {
+  return menuItems.map((item) => {
+    if (item.children) {
+      return getItem(
+        item.label,
+        item.key,
+        item.icon,
+        item.children.map((child) => getItem(child.label, child.key))
+      );
+    }
+    return getItem(item.label, item.key, item.icon);
+  });
+};
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const [userRole, setUserRole] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeMenuItems, setActiveMenuItems] = useState<CustomMenuItem[]>([]);
+  
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   const pathname = usePathname();
   const router = useRouter();
+  
+  // Fetch session data to determine user role
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        setIsLoading(true);
+        const sessionData = await getSessionClient();
+        // Get role from either direct property or user object
+        const role = sessionData.role || (sessionData.user?.role) || "";
+        setUserRole(role);
+        
+        // Set menu items based on role
+        if (role === "KITCHEN") {
+          setActiveMenuItems(kitchenMenu);
+        } else if (role === "SCHOOL") {
+          setActiveMenuItems(schoolMenu);
+        } else {
+          setActiveMenuItems([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch session:", error);
+        setActiveMenuItems([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchSession();
+  }, []);
 
   // Find the currently active menu item based on the pathname
   const findSelectedKey = () => {
+    if (!activeMenuItems.length) return [];
+    
     // First check for exact matches
-    const exactMatch = menuItems.find((item) => item.route === pathname);
+    const exactMatch = activeMenuItems.find((item) => item.route === pathname);
     if (exactMatch) return [exactMatch.key];
 
     // Then check for child routes
-    for (const item of menuItems) {
+    for (const item of activeMenuItems) {
       if (item.children) {
         const childMatch = item.children.find(
           (child) => child.route === pathname
@@ -109,7 +162,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       }
     }
 
-    return ["1"]; // Default selection
+    return []; // No selection if no match
   };
 
   // Handle logout action
@@ -146,7 +199,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       return undefined;
     };
 
-    const route = findRoute(menuItems);
+    const route = findRoute(activeMenuItems);
     if (route) {
       router.push(route);
     }
@@ -185,13 +238,17 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           <Image src={primaryLogo} alt="logo" />
         </div>
         <div className="flex flex-col justify-between h-full">
-          <Menu
-            className=""
-            selectedKeys={findSelectedKey()}
-            mode="inline"
-            items={items}
-            onClick={handleMenuClick}
-          />
+          {isLoading ? (
+            <div className="p-4 text-center">Loading...</div>
+          ) : (
+            <Menu
+              className=""
+              selectedKeys={findSelectedKey()}
+              mode="inline"
+              items={convertMenuItems(activeMenuItems)}
+              onClick={handleMenuClick}
+            />
+          )}
           <div
             className="p-[16px] text-red-700 cursor-pointer flex items-center gap-2 hover:bg-gray-100 mb-[100px]"
             onClick={handleLogout}

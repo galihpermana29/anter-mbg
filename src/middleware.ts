@@ -9,6 +9,7 @@ const publicRoutes = ["/login", "/"];
 const protectedRoutes = {
   KITCHEN: ["/admin"],
   SCHOOL: ["/school"],
+  DRIVER: ["/driver"],
 };
 
 export async function middleware(request: NextRequest) {
@@ -26,6 +27,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/admin/pesanan", request.url));
     } else if (session.role === "SCHOOL") {
       return NextResponse.redirect(new URL("/school", request.url));
+    } else if (session.role === "DRIVER") {
+      return NextResponse.redirect(new URL("/driver", request.url));
     }
 
     // Default redirect if role is not recognized

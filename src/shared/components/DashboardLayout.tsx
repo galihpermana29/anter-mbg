@@ -6,9 +6,13 @@ import {
   ShoppingCartOutlined,
   BookOutlined,
   LogoutOutlined,
+  CarOutlined,
+  DashboardOutlined,
+  DownOutlined,
+  MenuOutlined,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
-import { Breadcrumb, Layout, Menu, theme } from "antd";
+import { Avatar, Breadcrumb, Dropdown, Layout, Menu, Space, theme } from "antd";
 import primaryLogo from "@/assets/primary-logo.png";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -43,6 +47,26 @@ interface CustomMenuItem {
 // Define menu items with their corresponding routes
 const kitchenMenu: CustomMenuItem[] = [
   {
+    label: "Aktivitas",
+    key: "aktivitas",
+    icon: <CarOutlined />,
+    route: "/admin/aktivitas",
+    children: [
+      {
+        label: "Pengantaran",
+        key: "pengantaran",
+        icon: <ShoppingCartOutlined />,
+        route: "/admin/aktivitas/pengantaran",
+      },
+      {
+        label: "Pengambilan",
+        key: "pengambilan",
+        icon: <ShoppingCartOutlined />,
+        route: "/admin/aktivitas/pengambilan",
+      },
+    ],
+  },
+  {
     label: "Pesanan",
     key: "pesanan",
     icon: <ShoppingCartOutlined />,
@@ -64,6 +88,12 @@ const kitchenMenu: CustomMenuItem[] = [
 
 const schoolMenu: CustomMenuItem[] = [
   {
+    label: "Aktivitas",
+    key: "aktivitas",
+    icon: <CarOutlined />,
+    route: "/school/aktivitas",
+  },
+  {
     label: "Pesanan",
     key: "pesanan",
     icon: <ShoppingCartOutlined />,
@@ -74,6 +104,21 @@ const schoolMenu: CustomMenuItem[] = [
     key: "sekolah",
     icon: <BookOutlined />,
     route: "/school/profile",
+  },
+];
+
+const driverMenu: CustomMenuItem[] = [
+  {
+    label: "Dashboard",
+    key: "dashboard",
+    icon: <DashboardOutlined />,
+    route: "/driver",
+  },
+  {
+    label: "Aktivitas",
+    key: "aktivitas",
+    icon: <CarOutlined />,
+    route: "/driver/aktivitas",
   },
 ];
 
@@ -94,16 +139,52 @@ const convertMenuItems = (menuItems: CustomMenuItem[]): MenuItem[] => {
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const [userRole, setUserRole] = useState<string>("");
+  const [user, setUser] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
   const [activeMenuItems, setActiveMenuItems] = useState<CustomMenuItem[]>([]);
-  
+  const [sidebarFocused, setSidebarFocused] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Toggle sidebar focus and visibility
+  const toggleSidebarFocus = () => {
+    // If sidebar is collapsed, show it
+    if (collapsed) {
+      setCollapsed(false);
+      setSidebarFocused(true);
+    } else if (sidebarFocused) {
+      // If sidebar is focused, collapse it (close)
+      setCollapsed(true);
+      setSidebarFocused(false);
+    } else {
+      // If sidebar is visible but not focused, focus it
+      setSidebarFocused(true);
+    }
+  };
+
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   const pathname = usePathname();
   const router = useRouter();
-  
+
+  // Detect mobile screens
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 992);
+    };
+
+    // Initial check
+    checkIfMobile();
+
+    // Add event listener for window resize
+    window.addEventListener("resize", checkIfMobile);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("resize", checkIfMobile);
+    };
+  }, []);
+
   // Fetch session data to determine user role
   useEffect(() => {
     const fetchSession = async () => {
@@ -111,14 +192,16 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         setIsLoading(true);
         const sessionData = await getSessionClient();
         // Get role from either direct property or user object
-        const role = sessionData.role || (sessionData.user?.role) || "";
-        setUserRole(role);
-        
+        const role = sessionData.role || sessionData.user?.role || "";
+        setUser(sessionData.user?.fullname || "");
+
         // Set menu items based on role
         if (role === "KITCHEN") {
           setActiveMenuItems(kitchenMenu);
         } else if (role === "SCHOOL") {
           setActiveMenuItems(schoolMenu);
+        } else if (role === "DRIVER") {
+          setActiveMenuItems(driverMenu);
         } else {
           setActiveMenuItems([]);
         }
@@ -129,14 +212,14 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         setIsLoading(false);
       }
     };
-    
+
     fetchSession();
   }, []);
 
   // Find the currently active menu item based on the pathname
   const findSelectedKey = () => {
     if (!activeMenuItems.length) return [];
-    
+
     // First check for exact matches
     const exactMatch = activeMenuItems.find((item) => item.route === pathname);
     if (exactMatch) return [exactMatch.key];
@@ -201,6 +284,10 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
     const route = findRoute(activeMenuItems);
     if (route) {
+      // Close sidebar on mobile when navigating
+      if (isMobile) {
+        setCollapsed(true);
+      }
       router.push(route);
     }
   };
@@ -227,45 +314,190 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   }, [pathname]);
 
   return (
-    <Layout style={{ height: "100vh" }}>
-      <Sider
-        style={{ background: colorBgContainer }}
-        collapsible
-        collapsed={collapsed}
-        onCollapse={(value) => setCollapsed(value)}
-      >
-        <div className="h-[64px] flex items-center justify-center">
-          <Image src={primaryLogo} alt="logo" />
-        </div>
-        <div className="flex flex-col justify-between h-full">
-          {isLoading ? (
-            <div className="p-4 text-center">Loading...</div>
-          ) : (
-            <Menu
-              className=""
-              selectedKeys={findSelectedKey()}
-              mode="inline"
-              items={convertMenuItems(activeMenuItems)}
-              onClick={handleMenuClick}
+    <Layout style={{ minHeight: "100vh" }}>
+      {/* Mobile sidebar overlay implementation */}
+      {isMobile && (
+        <>
+          {/* Overlay background when sidebar is open */}
+          {!collapsed && (
+            <div
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 999,
+                backgroundColor: !collapsed
+                  ? "rgba(0, 0, 0, 0.5)"
+                  : "transparent",
+              }}
+              onClick={() => setCollapsed(true)}
             />
           )}
+
+          {/* Fixed position sidebar for mobile */}
           <div
-            className="p-[16px] text-red-700 cursor-pointer flex items-center gap-2 hover:bg-gray-100 mb-[100px]"
-            onClick={handleLogout}
+            style={{
+              position: "fixed",
+              zIndex: 1000,
+              left: collapsed ? "-250px" : 0,
+              top: 0,
+              height: "100%",
+              transition: "left 0.3s ease",
+              backgroundColor: "transparent",
+            }}
           >
-            <LogoutOutlined />
-            {!collapsed && <span className="font-[500]">Logout</span>}
+            <Sider
+              collapsedWidth={0}
+              collapsed={false}
+              width={250}
+              style={{
+                background: colorBgContainer,
+                height: "100vh",
+              }}
+            >
+              {/* Sidebar content */}
+              <div
+                className={`h-[64px] px-[22px] flex items-center justify-start`}
+              >
+                <h1>Kawal MBG</h1>
+              </div>
+              <div className="flex flex-col justify-between h-full">
+                {isLoading ? (
+                  <div className="p-4 text-center">Loading...</div>
+                ) : (
+                  <Menu
+                    className={`${sidebarFocused ? "sidebar-focused" : ""}`}
+                    selectedKeys={findSelectedKey()}
+                    mode="inline"
+                    items={convertMenuItems(activeMenuItems)}
+                    onClick={handleMenuClick}
+                    style={{
+                      fontWeight: sidebarFocused ? 500 : 400,
+                    }}
+                  />
+                )}
+                <div
+                  className="p-[16px] text-red-700 cursor-pointer flex items-center gap-2 hover:bg-gray-100 mb-[100px]"
+                  onClick={handleLogout}
+                >
+                  <LogoutOutlined />
+                  <span className="font-[500]">Logout</span>
+                </div>
+              </div>
+            </Sider>
           </div>
-        </div>
-      </Sider>
+        </>
+      )}
+
+      {/* Desktop sidebar implementation */}
+      {!isMobile && (
+        <Sider
+          breakpoint="lg"
+          collapsedWidth="0"
+          style={{
+            background: colorBgContainer,
+            overflow: "auto",
+            height: "100vh",
+            position: "sticky",
+            insetInlineStart: 0,
+            top: 0,
+            bottom: 0,
+            scrollbarWidth: "thin",
+            scrollbarGutter: "stable",
+            boxShadow: sidebarFocused ? "0 0 10px rgba(0, 0, 0, 0.2)" : "none",
+            zIndex: 1000,
+            transition: "all 0.3s ease",
+          }}
+          collapsible
+          collapsed={collapsed}
+          onCollapse={(value) => {
+            setCollapsed(value);
+            // Reset focus state when sidebar is collapsed
+            if (value) {
+              setSidebarFocused(false);
+            }
+          }}
+        >
+          <div className={`h-[64px] px-[22px] flex items-center justify-start`}>
+            <h1>Kawal MBG</h1>
+          </div>
+          <div className="flex flex-col justify-between h-full">
+            {isLoading ? (
+              <div className="p-4 text-center">Loading...</div>
+            ) : (
+              <Menu
+                className={`${sidebarFocused ? "sidebar-focused" : ""}`}
+                selectedKeys={findSelectedKey()}
+                mode="inline"
+                items={convertMenuItems(activeMenuItems)}
+                onClick={handleMenuClick}
+                style={{
+                  fontWeight: sidebarFocused ? 500 : 400,
+                }}
+              />
+            )}
+            <div
+              className="p-[16px] text-red-700 cursor-pointer flex items-center gap-2 hover:bg-gray-100 mb-[100px]"
+              onClick={handleLogout}
+            >
+              <LogoutOutlined />
+              {!collapsed && <span className="font-[500]">Logout</span>}
+            </div>
+          </div>
+        </Sider>
+      )}
+
+      {/* Main content layout */}
       <Layout>
-        <Header style={{ padding: 0, background: colorBgContainer }} />
+        <Header style={{ padding: "0 16px", background: colorBgContainer }}>
+          <div className="flex justify-between lg:justify-end">
+            <h1 className="lg:hidden">Kawal MBG</h1>
+            <div
+              className={`cursor-pointer lg:hidden rounded-md transition-all ${
+                sidebarFocused ? "text-blue-700" : ""
+              }`}
+              onClick={toggleSidebarFocus}
+              title={
+                collapsed
+                  ? "Show Sidebar"
+                  : sidebarFocused
+                  ? "Close Sidebar"
+                  : "Focus Sidebar"
+              }
+            >
+              <MenuOutlined style={{ fontSize: "18px" }} />
+            </div>
+            <div className="hidden lg:block">
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: "1",
+                      label: "Logout",
+                      icon: <LogoutOutlined />,
+                    },
+                  ],
+                }}
+              >
+                <Space>
+                  <Avatar>{user.charAt(0).toUpperCase()}</Avatar>
+                  <h1 className="line-clamp-2 word-break max-w-[100px]">
+                    {" "}
+                    {user}
+                  </h1>
+                </Space>
+              </Dropdown>
+            </div>
+          </div>
+        </Header>
         <Content style={{ margin: "0 16px" }}>
           <Breadcrumb style={{ margin: "16px 0" }} items={breadcrumbItems} />
           <div
             style={{
               padding: 24,
-              height: "80vh",
+              minHeight: "100vh",
               background: colorBgContainer,
               borderRadius: borderRadiusLG,
               overflowY: "auto",
@@ -274,9 +506,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             {children}
           </div>
         </Content>
-        <Footer style={{ textAlign: "center", zIndex: 9999 }}>
-          Ant Design ©{new Date().getFullYear()} Created by Ant UED
-        </Footer>
       </Layout>
     </Layout>
   );

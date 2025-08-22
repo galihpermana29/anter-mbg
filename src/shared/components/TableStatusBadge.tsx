@@ -18,7 +18,7 @@ const TableStatusBadge = ({ status }: { status: string }) => {
   }
 
   if (status === "Pending") {
-    return <Badge count={status} color="yellow" />;
+    return <Badge count={status} color="purple" />;
   }
 
   return <Badge count={status} color="gray" />;

@@ -96,3 +96,23 @@ export function useAssignDriver() {
     },
   });
 }
+
+export function useKitchenLiveDelivery() {
+  const query = useSearchParams();
+  const date = query.get("date") || "";
+
+  const result = useQuery({
+    queryKey: [{ key: "kitchenLiveDelivery", date }],
+    queryFn: async () => {
+      // Build the query string
+      let queryString = `/v1/deliveries/live?mode=delivery&date=${date}`;
+
+      return await fetchAPI<DeliveryListResponse>(queryString);
+    },
+  });
+
+  return {
+    ...result,
+    date,
+  };
+}

@@ -2,6 +2,8 @@ export interface School {
   id: string;
   name: string;
   address: string;
+  latitude: number;
+  longitude: number;
 }
 
 export interface Driver {

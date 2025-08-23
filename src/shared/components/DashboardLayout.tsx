@@ -492,11 +492,11 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
         </Header>
-        <Content style={{ margin: "0 16px" }}>
+        <Content style={{ margin: "0 10px" }}>
           <Breadcrumb style={{ margin: "16px 0" }} items={breadcrumbItems} />
           <div
             style={{
-              padding: 24,
+              padding: 16,
               minHeight: "100vh",
               background: colorBgContainer,
               borderRadius: borderRadiusLG,

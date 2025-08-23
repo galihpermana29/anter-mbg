@@ -4,6 +4,7 @@ import { DatePicker, Input, Select, Table, Spin } from "antd";
 import {
   useAssignDriver,
   useDriverOptions,
+  useKitchenLiveDelivery,
   useListDeliveries,
 } from "./repository/useDelivery";
 import { ColumnsType } from "antd/es/table";
@@ -15,6 +16,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { orderStatusDropdown } from "@/shared/models/dropdown";
+import DeliveryCard from "@/app/(driver)/driver/aktivitas/components/DeliveryCard";
 
 export default function PengantaranPage() {
   const { data, isLoading, error, date } = useListDeliveries();
@@ -22,6 +24,11 @@ export default function PengantaranPage() {
     useDriverOptions();
   const { mutate: assignDriver } = useAssignDriver();
 
+  const {
+    data: liveData,
+    isLoading: liveLoading,
+    error: liveError,
+  } = useKitchenLiveDelivery();
   // Track which orders are currently being processed
   const [processingOrders, setProcessingOrders] = useState<
     Record<string, boolean>
@@ -165,8 +172,30 @@ export default function PengantaranPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-[24px]">
-        <h1 className="text-[24px] font-[500]">Pengantaran</h1>
+        <h1 className="text-[24px] font-[500]">Aktivitas</h1>
       </div>
+      <ErrorBoundary error={liveError}>
+        <div className="mb-[22px]">
+          <h1 className="text-[16px] font-[500] mb-[12px]">
+            Aktivitas Berlangsung
+          </h1>
+          <div className="flex flex-wrap gap-[12px]">
+            {liveLoading ? (
+              <Spin tip="Loading session data..." />
+            ) : liveData!.data.length > 0 ? (
+              liveData?.data.map((delivery) => (
+                <DeliveryCard
+                  key={delivery.order_id}
+                  mode="KITCHEN"
+                  delivery={delivery}
+                />
+              ))
+            ) : (
+              <p>Tidak ada aktivitas berlangsung</p>
+            )}
+          </div>
+        </div>
+      </ErrorBoundary>
       <ErrorBoundary error={error}>
         <div className="">
           <div className="flex gap-[8px] md:flex-row flex-col mb-[24px]">

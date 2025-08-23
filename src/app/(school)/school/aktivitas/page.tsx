@@ -9,12 +9,22 @@ import TableStatusBadge from "@/shared/components/TableStatusBadge";
 import { SearchOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { orderStatusDropdown } from "@/shared/models/dropdown";
-import { useSchoolDeliveries } from "./repository/useSchoolDelivery";
+import {
+  useSchoolDeliveries,
+  useSchoolLiveDelivery,
+} from "./repository/useSchoolDelivery";
+import DeliveryCard from "@/app/(driver)/driver/aktivitas/components/DeliveryCard";
 
 export default function SchoolAktivitasPage() {
   const { data, isLoading, error, isSessionLoading, date } =
     useSchoolDeliveries();
 
+  const {
+    data: liveData,
+    isLoading: liveLoading,
+    error: liveError,
+  } = useSchoolLiveDelivery();
+  console.log(liveData, "?");
   const columns: ColumnsType<Delivery> = [
     {
       title: "Porsi",
@@ -80,10 +90,25 @@ export default function SchoolAktivitasPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-[24px]">
-        <h1 className="text-[24px] font-[500]">Pengantaran</h1>
+        <h1 className="text-[24px] font-[500]">Aktivitas</h1>
       </div>
+      <ErrorBoundary error={liveError}>
+        <div className="max-w-[300px] mb-[22px]">
+          <h1 className="text-[16px] font-[500] mb-[12px]">
+            Aktivitas Berlangsung
+          </h1>
+          {liveLoading ? (
+            <Spin size="large" tip="Loading session data..." />
+          ) : (
+            <DeliveryCard mode="SCHOOL" delivery={liveData?.data[0] || null} />
+          )}
+        </div>
+      </ErrorBoundary>
       <ErrorBoundary error={error}>
         <div className="">
+          <h1 className="text-[16px] font-[500] mb-[12px]">
+            Aktivitas Yang Akan Datang
+          </h1>
           <div className="flex gap-[8px] md:flex-row flex-col mb-[24px]">
             <div className="md:w-[240px] w-full">
               <DatePicker

@@ -24,13 +24,25 @@ import { useDriverDeliveries } from "./repository/useDriverDelivery";
 import { useState } from "react";
 import DeliveryCard from "./components/DeliveryCard";
 import toast from "react-hot-toast";
+import dynamic from "next/dynamic";
+const DriverMaps = dynamic(() => import("./components/DriverMaps"), {
+  ssr: false,
+});
 
 export default function DriverAktivitasPage() {
-  const { data, isLoading, error, isSessionLoading, date, updateStatusMutation } =
-    useDriverDeliveries();
+  const {
+    data,
+    isLoading,
+    error,
+    isSessionLoading,
+    date,
+    updateStatusMutation,
+  } = useDriverDeliveries();
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
+  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(
+    null
+  );
   const [statusAction, setStatusAction] = useState<{
     status: string;
     title: string;
@@ -75,7 +87,10 @@ export default function DriverAktivitasPage() {
   };
 
   // Handle status update button click
-  const handleStatusButtonClick = (delivery: Delivery, action: { status: string; title: string; icon: React.ReactNode }) => {
+  const handleStatusButtonClick = (
+    delivery: Delivery,
+    action: { status: string; title: string; icon: React.ReactNode }
+  ) => {
     setSelectedDelivery(delivery);
     setStatusAction(action);
     setIsModalOpen(true);
@@ -92,19 +107,23 @@ export default function DriverAktivitasPage() {
   // Handle form submission using mutation
   const handleSubmit = (values: { note: string }) => {
     if (!selectedDelivery || !statusAction) return;
-    
+
     updateStatusMutation.mutate({
       orderId: selectedDelivery.order_id,
       status: statusAction.status,
       note: values.note,
     });
-    
+
     // Close modal on submission
     setIsModalOpen(false);
   };
 
   return (
     <div>
+      <div className="flex items-center justify-between mb-[24px]">
+        <h1 className="text-[24px] font-[500]">Maps</h1>
+      </div>
+      <DriverMaps />
       <div className="flex items-center justify-between mb-[24px]">
         <h1 className="text-[24px] font-[500]">Pengantaran</h1>
       </div>
@@ -156,7 +175,6 @@ export default function DriverAktivitasPage() {
                   >
                     <DeliveryCard
                       delivery={delivery}
-                      expandedCardId={expandedCardId}
                       onToggleExpand={toggleCardExpansion}
                       onStatusUpdate={handleStatusButtonClick}
                     />
@@ -193,13 +211,22 @@ export default function DriverAktivitasPage() {
             label="Catatan"
             rules={[{ required: true, message: "Catatan wajib diisi" }]}
           >
-            <AntInput.TextArea rows={4} placeholder="Masukkan catatan" disabled={updateStatusMutation.isPending} />
+            <AntInput.TextArea
+              rows={4}
+              placeholder="Masukkan catatan"
+              disabled={updateStatusMutation.isPending}
+            />
           </Form.Item>
           <div className="flex justify-end gap-2">
-            <Button onClick={handleCancel} disabled={updateStatusMutation.isPending}>Batal</Button>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
+            <Button
+              onClick={handleCancel}
+              disabled={updateStatusMutation.isPending}
+            >
+              Batal
+            </Button>
+            <Button
+              type="primary"
+              htmlType="submit"
               loading={updateStatusMutation.isPending}
             >
               Simpan

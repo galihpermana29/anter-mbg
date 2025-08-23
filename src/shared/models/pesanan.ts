@@ -1,5 +1,13 @@
+import { Delivery } from "./delivery";
+
 export interface IListPesanan {
   data: Pesanan[];
+  status: string;
+  meta: Meta;
+}
+
+export interface IDetailDelivery {
+  data: Delivery;
   status: string;
   meta: Meta;
 }

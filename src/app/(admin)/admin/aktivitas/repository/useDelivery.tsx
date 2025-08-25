@@ -20,6 +20,7 @@ export function useListDeliveries() {
   const date = query.get("date"); // Default to today's date
   const limit = query.get("limit") || "20";
   const status = query.get("status") || "";
+  const mode = query.get("mode") || "delivery";
 
   useEffect(() => {
     if (date === "" || !date) {
@@ -29,10 +30,10 @@ export function useListDeliveries() {
 
   // Fetch data using React Query
   const result = useQuery({
-    queryKey: [{ key: "deliveries", page, search, date, limit, status }],
+    queryKey: [{ key: "deliveries", page, search, date, limit, status, mode }],
     queryFn: async () => {
       // Build the query string
-      let queryString = `/v1/deliveries?mode=delivery&page=${page}&limit=${limit}&q=${search}&date=${date}`;
+      let queryString = `/v1/deliveries?mode=${mode}&page=${page}&limit=${limit}&q=${search}&date=${date}`;
 
       // Add status filter if present
       if (status) {
@@ -100,12 +101,13 @@ export function useAssignDriver() {
 export function useKitchenLiveDelivery() {
   const query = useSearchParams();
   const date = query.get("date") || "";
+  const mode = query.get("mode") || "delivery";
 
   const result = useQuery({
-    queryKey: [{ key: "kitchenLiveDelivery", date }],
+    queryKey: [{ key: "kitchenLiveDelivery", date, mode }],
     queryFn: async () => {
       // Build the query string
-      let queryString = `/v1/deliveries/live?mode=delivery&date=${date}`;
+      let queryString = `/v1/deliveries/live?mode=${mode}&date=${date}`;
 
       return await fetchAPI<DeliveryListResponse>(queryString);
     },

@@ -1,6 +1,17 @@
 "use client";
 
-import { DatePicker, Input, Select, Table, Spin } from "antd";
+import {
+  DatePicker,
+  Input,
+  Select,
+  Table,
+  Spin,
+  Modal,
+  Form,
+  Button,
+  Rate,
+  Segmented,
+} from "antd";
 import { ColumnsType } from "antd/es/table";
 import { Delivery } from "@/shared/models/delivery";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
@@ -10,10 +21,16 @@ import { SearchOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { orderStatusDropdown } from "@/shared/models/dropdown";
 import {
+  useRequestPickupPlates,
   useSchoolDeliveries,
   useSchoolLiveDelivery,
 } from "./repository/useSchoolDelivery";
 import DeliveryCard from "@/app/(driver)/driver/aktivitas/components/DeliveryCard";
+import DraggerUpload from "@/shared/components/Uploader";
+import TextArea from "antd/es/input/TextArea";
+import { useState, useMemo } from "react";
+import { RequestPickupPlatesPayload } from "@/shared/models/pesanan";
+import ClientSideSchoolMaps from "./component/ClientSideSchoolMaps";
 
 export default function SchoolAktivitasPage() {
   const { data, isLoading, error, isSessionLoading, date } =
@@ -24,7 +41,22 @@ export default function SchoolAktivitasPage() {
     isLoading: liveLoading,
     error: liveError,
   } = useSchoolLiveDelivery();
-  console.log(liveData, "?");
+  const activeOrderId = liveData?.data?.[0]?.order_id || "";
+
+  const [form] = Form.useForm();
+
+  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(
+    null
+  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [statusAction, setStatusAction] = useState<{
+    status: string;
+    title: string;
+    icon: React.ReactNode;
+  } | null>(null);
+
+  const requestPickupPlatesMutation = useRequestPickupPlates();
+
   const columns: ColumnsType<Delivery> = [
     {
       title: "Porsi",
@@ -87,25 +119,101 @@ export default function SchoolAktivitasPage() {
     setUrlParams({ page: "1" });
   };
 
+  const handleSubmitMutation = async (values: RequestPickupPlatesPayload) => {
+    if (!statusAction || !selectedDelivery) return;
+
+    requestPickupPlatesMutation.mutate({
+      order_id: selectedDelivery.order_id,
+      notes: values.notes,
+      image_url: values.image_url,
+      rating: values.rating,
+    });
+
+    // Close modal on submission
+    setIsModalOpen(false);
+  };
+  // Handle modal cancel
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    setSelectedDelivery(null);
+    setStatusAction(null);
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-[24px]">
+      <div className="flex items-start lg:items-center justify-between mb-[24px] flex-col lg:flex-row">
         <h1 className="text-[24px] font-[500]">Aktivitas</h1>
+        <Segmented
+          defaultValue={"delivery"}
+          options={[
+            {
+              label: "Pengantaran",
+              value: "delivery",
+            },
+            {
+              label: "Pengambilan",
+              value: "pickup",
+            },
+          ]}
+          onChange={(value) => {
+            setUrlParams({ mode: value });
+            setUrlParams({ page: "1" });
+          }}
+        />
       </div>
       <ErrorBoundary error={liveError}>
-        <div className="max-w-[300px] mb-[22px]">
-          <h1 className="text-[16px] font-[500] mb-[12px]">
-            Aktivitas Berlangsung
-          </h1>
-          {liveLoading ? (
-            <Spin size="large" tip="Loading session data..." />
-          ) : (
-            <DeliveryCard mode="SCHOOL" delivery={liveData?.data[0] || null} />
+        <div className="flex flex-col lg:flex-row gap-[22px] min:h-[300px]  overflow-hidden">
+          {liveData?.data && liveData?.data?.length > 0 && (
+            <div className="w-full max-w-[300px] mb-[22px]  overflow-hidden h-full">
+              <h1 className="text-[16px] font-[500] mb-[12px]">
+                Aktivitas Berlangsung
+              </h1>
+              {liveLoading ? (
+                <Spin size="large" tip="Loading session data..." />
+              ) : (
+                <DeliveryCard
+                  onStatusUpdate={() => {
+                    setSelectedDelivery(liveData?.data[0] || null);
+                    setStatusAction({
+                      status: "",
+                      title: "Request Ambil Piring",
+                      icon: null,
+                    });
+                    setIsModalOpen(true);
+                  }}
+                  mode="SCHOOL"
+                  delivery={liveData?.data[0] || null}
+                />
+              )}
+            </div>
+          )}
+
+          {liveData && liveData?.data?.length > 0 && (
+            <div className="w-full">
+              <h1 className="text-[16px] font-[500] mb-[12px]">Maps</h1>
+              {liveData?.data && liveData.data[0] && (
+                <ClientSideSchoolMaps
+                  orderId={activeOrderId}
+                  schoolPosition={
+                    liveData.data[0].school
+                      ? ([
+                          liveData.data[0].school.latitude,
+                          liveData.data[0].school.longitude,
+                        ] as [number, number])
+                      : undefined
+                  }
+                />
+              )}
+            </div>
           )}
         </div>
       </ErrorBoundary>
       <ErrorBoundary error={error}>
-        <div className="">
+        <div
+          className={`${
+            liveData && liveData?.data?.length > 0 ? "mt-[22px]" : ""
+          }`}
+        >
           <h1 className="text-[16px] font-[500] mb-[12px]">
             Aktivitas Yang Akan Datang
           </h1>
@@ -131,7 +239,6 @@ export default function SchoolAktivitasPage() {
               <Select
                 className="w-full"
                 placeholder="Filter Status"
-                value={status && status !== "" ? (status as string) : null}
                 onChange={handleStatusChange}
                 options={orderStatusDropdown}
                 allowClear
@@ -157,6 +264,62 @@ export default function SchoolAktivitasPage() {
               scroll={{ x: 1000 }}
             />
           )}
+
+          <Modal
+            title={statusAction?.title || "Update Status"}
+            open={isModalOpen}
+            onCancel={handleCancel}
+            footer={null}
+            maskClosable={!requestPickupPlatesMutation.isPending}
+          >
+            <Form form={form} onFinish={handleSubmitMutation} layout="vertical">
+              <Form.Item
+                name={"image_url"}
+                label="Bukti"
+                rules={[{ required: true, message: "Bukti wajib diisi" }]}
+              >
+                <DraggerUpload
+                  formItemName="image_url"
+                  form={form}
+                  limit={1}
+                  multiple={false}
+                />
+              </Form.Item>
+              <Form.Item
+                name="rating"
+                label="Rating"
+                rules={[{ required: true, message: "Rating wajib diisi" }]}
+              >
+                <Rate />
+              </Form.Item>
+              <Form.Item
+                name="notes"
+                label="Catatan"
+                rules={[{ required: true, message: "Catatan wajib diisi" }]}
+              >
+                <TextArea
+                  rows={4}
+                  placeholder="Masukkan catatan"
+                  disabled={requestPickupPlatesMutation.isPending}
+                />
+              </Form.Item>
+              <div className="flex justify-end gap-2">
+                <Button
+                  onClick={handleCancel}
+                  disabled={requestPickupPlatesMutation.isPending}
+                >
+                  Batal
+                </Button>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={requestPickupPlatesMutation.isPending}
+                >
+                  Simpan
+                </Button>
+              </div>
+            </Form>
+          </Modal>
         </div>
       </ErrorBoundary>
     </div>

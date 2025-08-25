@@ -25,6 +25,7 @@ import { useState } from "react";
 import DeliveryCard from "./components/DeliveryCard";
 import toast from "react-hot-toast";
 import dynamic from "next/dynamic";
+import DraggerUpload from "@/shared/components/Uploader";
 const DriverMaps = dynamic(() => import("./components/DriverMaps"), {
   ssr: false,
 });
@@ -105,13 +106,14 @@ export default function DriverAktivitasPage() {
   };
 
   // Handle form submission using mutation
-  const handleSubmit = (values: { note: string }) => {
+  const handleSubmit = (values: { note: string; proof_image_url: string }) => {
     if (!selectedDelivery || !statusAction) return;
 
     updateStatusMutation.mutate({
       orderId: selectedDelivery.order_id,
       status: statusAction.status,
       note: values.note,
+      proof_image_url: values.proof_image_url,
     });
 
     // Close modal on submission
@@ -206,6 +208,18 @@ export default function DriverAktivitasPage() {
         maskClosable={!updateStatusMutation.isPending}
       >
         <Form form={form} onFinish={handleSubmit} layout="vertical">
+          <Form.Item
+            name={"proof_image_url"}
+            label="Bukti"
+            rules={[{ required: true, message: "Bukti wajib diisi" }]}
+          >
+            <DraggerUpload
+              formItemName="proof_image_url"
+              form={form}
+              limit={1}
+              multiple={false}
+            />
+          </Form.Item>
           <Form.Item
             name="note"
             label="Catatan"

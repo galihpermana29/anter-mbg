@@ -1,6 +1,6 @@
 "use client";
 
-import { DatePicker, Input, Select, Table, Spin } from "antd";
+import { DatePicker, Input, Select, Table, Spin, Segmented } from "antd";
 import {
   useAssignDriver,
   useDriverOptions,
@@ -173,6 +173,23 @@ export default function PengantaranPage() {
     <div>
       <div className="flex items-center justify-between mb-[24px]">
         <h1 className="text-[24px] font-[500]">Aktivitas</h1>
+        <Segmented
+          defaultValue={"delivery"}
+          options={[
+            {
+              label: "Pengantaran",
+              value: "delivery",
+            },
+            {
+              label: "Pengambilan",
+              value: "pickup",
+            },
+          ]}
+          onChange={(value) => {
+            setUrlParams({ mode: value });
+            setUrlParams({ page: "1" });
+          }}
+        />
       </div>
       <ErrorBoundary error={liveError}>
         <div className="mb-[22px]">

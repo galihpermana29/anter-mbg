@@ -51,20 +51,6 @@ const kitchenMenu: CustomMenuItem[] = [
     key: "aktivitas",
     icon: <CarOutlined />,
     route: "/admin/aktivitas",
-    children: [
-      {
-        label: "Pengantaran",
-        key: "pengantaran",
-        icon: <ShoppingCartOutlined />,
-        route: "/admin/aktivitas/pengantaran",
-      },
-      {
-        label: "Pengambilan",
-        key: "pengambilan",
-        icon: <ShoppingCartOutlined />,
-        route: "/admin/aktivitas/pengambilan",
-      },
-    ],
   },
   {
     label: "Pesanan",

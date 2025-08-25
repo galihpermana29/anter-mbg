@@ -12,6 +12,7 @@ interface StatusUpdatePayload {
   orderId: string;
   status: string;
   note: string;
+  proof_image_url: string;
 }
 
 export function useDriverDeliveries() {
@@ -81,7 +82,7 @@ export function useDriverDeliveries() {
     mutationFn: async (payload: StatusUpdatePayload) => {
       const { orderId, status, note } = payload;
       return await fetchAPI(`/v1/deliveries/${orderId}/status`, {
-        method: 'PATCH',
+        method: "PATCH",
         body: JSON.stringify({
           status,
           note,
@@ -90,7 +91,9 @@ export function useDriverDeliveries() {
     },
     onSuccess: () => {
       // Invalidate and refetch the deliveries query
-      queryClient.invalidateQueries({ queryKey: [{ key: "driverDeliveries" }] });
+      queryClient.invalidateQueries({
+        queryKey: [{ key: "driverDeliveries" }],
+      });
       toast.success("Status berhasil diperbarui");
     },
     onError: (error) => {

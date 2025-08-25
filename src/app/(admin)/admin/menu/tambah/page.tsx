@@ -14,6 +14,8 @@ import {
 } from "../repository/useMutateMenu";
 import { ICreateMenuPayload } from "@/shared/models/menu";
 import { jenjangDropdown } from "@/shared/models/dropdown";
+import DraggerUpload from "@/shared/components/Uploader";
+import { useWatch } from "antd/es/form/Form";
 
 export default function MenuFormPage() {
   const router = useRouter();
@@ -34,26 +36,30 @@ export default function MenuFormPage() {
   const { data: menuDetail, isFetching: isLoadingDetail } =
     useGetDetailMenu(menuId);
 
+  const imageUrls = useWatch("image_url", form);
+
   // Set form values when menu detail is loaded in edit mode
   useEffect(() => {
     if (isEditMode && menuDetail?.data) {
+      console.log(menuDetail, "menu detail");
       form.setFieldsValue({
         name: menuDetail.data.name,
         category: menuDetail.data.category,
+        image_url: menuDetail.data.image_url,
       });
 
       // Set image preview if exists
-      if (menuDetail.data.image_url) {
-        setImageUrl(menuDetail.data.image_url);
-        setFileList([
-          {
-            uid: "-1",
-            name: "menu-image.png",
-            status: "done",
-            url: menuDetail.data.image_url,
-          },
-        ]);
-      }
+      // if (menuDetail.data.image_url) {
+      //   setImageUrl(menuDetail.data.image_url);
+      //   setFileList([
+      //     {
+      //       uid: "-1",
+      //       name: "menu-image.png",
+      //       status: "done",
+      //       url: menuDetail.data.image_url,
+      //     },
+      //   ]);
+      // }
     }
   }, [isEditMode, menuDetail, form]);
 
@@ -61,12 +67,13 @@ export default function MenuFormPage() {
   const handleSubmit = async (values: any) => {
     try {
       setIsSubmitting(true);
+      console.log(values, "values");
 
       // Prepare payload
       const payload: ICreateMenuPayload = {
         name: values.name,
         category: values.category,
-        image_url: "", // Default empty string, will be updated if image exists
+        image_url: values?.image_url,
       };
 
       // Add image if available
@@ -161,32 +168,20 @@ export default function MenuFormPage() {
 
             <Col xs={24}>
               <Form.Item
+                rules={[{ required: true, message: "Gambar menu wajib diisi" }]}
                 label="Gambar Menu"
-                name="image"
-                valuePropName="fileList"
-                getValueFromEvent={(e) => e?.fileList}
+                name="image_url"
+                // valuePropName="fileList"
+                // getValueFromEvent={(e) => e?.fileList}
               >
-                <Upload
-                  listType="picture"
-                  maxCount={1}
-                  fileList={fileList}
-                  onChange={handleImageUpload}
-                  beforeUpload={() => false} // Prevent auto upload
-                >
-                  <Button icon={<UploadOutlined />}>Upload Gambar</Button>
-                </Upload>
+                <DraggerUpload
+                  profileImageURL={imageUrls || ""}
+                  formItemName="image_url"
+                  form={form}
+                  limit={1}
+                  multiple={false}
+                />
               </Form.Item>
-
-              {imageUrl && (
-                <div className="mb-4">
-                  <p className="mb-2">Preview:</p>
-                  <img
-                    src={imageUrl}
-                    alt="Menu Preview"
-                    style={{ maxWidth: "200px", maxHeight: "200px" }}
-                  />
-                </div>
-              )}
             </Col>
           </Row>
 

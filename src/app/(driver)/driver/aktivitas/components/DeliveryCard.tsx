@@ -25,7 +25,7 @@ export default function DeliveryCard({
 }: DeliveryCardProps) {
   // Get action button based on status
   const getActionButton = () => {
-    if (delivery?.status === "Siap Diantar") {
+    if (delivery?.status === "Siap Diantar" && mode === "DRIVER") {
       return (
         <Button
           type="primary"
@@ -42,7 +42,9 @@ export default function DeliveryCard({
           Konfirmasi & Antar
         </Button>
       );
-    } else if (delivery?.status === "Menuju Sekolah") {
+    }
+
+    if (delivery?.status === "Menuju Sekolah" && mode === "DRIVER") {
       return (
         <Button
           type="primary"
@@ -59,7 +61,9 @@ export default function DeliveryCard({
           Tiba di Sekolah
         </Button>
       );
-    } else if (delivery?.status === "Piring Siap Diambil") {
+    }
+
+    if (delivery?.status === "Piring Siap Diambil" && mode === "DRIVER") {
       return (
         <Button
           type="primary"
@@ -73,7 +77,26 @@ export default function DeliveryCard({
             });
           }}
         >
-          Ambil Piring
+          Konfirmasi Piring & Kembali
+        </Button>
+      );
+    }
+
+    if (delivery?.status === "Makanan Diterima" && mode === "SCHOOL") {
+      return (
+        <Button
+          type="primary"
+          block
+          onClick={(e) => {
+            e.stopPropagation();
+            onStatusUpdate?.(delivery, {
+              status: "REQUEST_PLATES",
+              title: "Request Ambil Piring",
+              icon: <InboxOutlined />,
+            });
+          }}
+        >
+          Request Ambil Piring
         </Button>
       );
     }
@@ -128,7 +151,7 @@ export default function DeliveryCard({
         {/* Action Button */}
         <div className="mt-3">
           {" "}
-          {mode === "DRIVER" ? getActionButton() : null}
+          {["DRIVER", "SCHOOL"].includes(mode) ? getActionButton() : null}
         </div>
       </div>
     </Card>

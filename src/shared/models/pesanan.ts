@@ -6,6 +6,13 @@ export interface IListPesanan {
   meta: Meta;
 }
 
+export interface RequestPickupPlatesPayload {
+  order_id: string;
+  notes: string;
+  image_url: string;
+  rating: number;
+}
+
 export interface IDetailDelivery {
   data: Delivery;
   status: string;

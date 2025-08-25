@@ -35,6 +35,7 @@ const LocationMarker = ({
   driverId: string;
   activeOrderId: string | null;
 }) => {
+  console.log(activeOrderId, "activeOrderId");
   const [location, setLocation] = useState<[number, number] | null>(null);
   const locationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -201,10 +202,11 @@ const DriverMaps = () => {
     return data.data
       .filter((delivery: Delivery) => {
         // Only show schools for deliveries with status "siap diantar" or "menuju sekolah"
-        return (
-          delivery.status === "Siap Diantar" ||
-          delivery.status === "Menuju Sekolah"
-        );
+        return [
+          "Siap Diantar",
+          "Menuju Sekolah",
+          "Piring Siap Diambil",
+        ].includes(delivery.status);
       })
       .map((delivery: Delivery) => {
         const { school } = delivery;
@@ -223,8 +225,8 @@ const DriverMaps = () => {
   // Find active order (Menuju Sekolah)
   useEffect(() => {
     if (schoolMarkers.length > 0) {
-      const activeOrder = schoolMarkers.find(
-        (marker) => marker.status === "Menuju Sekolah"
+      const activeOrder = schoolMarkers.find((marker) =>
+        ["Menuju Sekolah", "Piring Siap Diambil"].includes(marker.status)
       );
 
       if (activeOrder) {

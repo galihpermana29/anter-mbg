@@ -1,11 +1,12 @@
 import { fetchAPI } from "@/shared/repository/api";
 import { DeliveryListResponse } from "@/shared/models/delivery";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getUrlParams, setUrlParams } from "@/shared/usecase/url-params";
 import { getSessionClient } from "@/shared/session/get-session-client";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
+import { RequestPickupPlatesPayload } from "@/shared/models/pesanan";
 
 export function useSchoolDeliveries() {
   const [schoolId, setSchoolId] = useState<string | null>(null);
@@ -18,6 +19,7 @@ export function useSchoolDeliveries() {
   const date = query.get("date");
   const limit = query.get("limit") || "20";
   const status = query.get("status") || "";
+  const mode = query.get("mode") || "delivery";
 
   // Get school_id from session
   useEffect(() => {
@@ -44,7 +46,16 @@ export function useSchoolDeliveries() {
   // Fetch data using React Query
   const result = useQuery({
     queryKey: [
-      { key: "schoolDeliveries", schoolId, page, search, date, limit, status },
+      {
+        key: "schoolDeliveries",
+        schoolId,
+        page,
+        search,
+        date,
+        limit,
+        status,
+        mode,
+      },
     ],
     queryFn: async () => {
       if (!schoolId) {
@@ -56,7 +67,7 @@ export function useSchoolDeliveries() {
       }
 
       // Build the query string
-      let queryString = `/v1/deliveries?mode=delivery&school_id=${schoolId}&page=${page}&limit=${limit}&q=${search}&date=${date}`;
+      let queryString = `/v1/deliveries?mode=${mode}&school_id=${schoolId}&page=${page}&limit=${limit}&q=${search}&date=${date}`;
 
       // Add status filter if present
       if (status) {
@@ -78,12 +89,13 @@ export function useSchoolDeliveries() {
 export function useSchoolLiveDelivery() {
   const query = useSearchParams();
   const date = query.get("date") || "";
+  const mode = query.get("mode") || "delivery";
 
   const result = useQuery({
-    queryKey: [{ key: "liveDelivery", date }],
+    queryKey: [{ key: "liveDelivery", date, mode }],
     queryFn: async () => {
       // Build the query string
-      let queryString = `/v1/deliveries/live?mode=delivery&date=${date}`;
+      let queryString = `/v1/deliveries/live?mode=${mode}&date=${date}`;
 
       return await fetchAPI<DeliveryListResponse>(queryString);
     },
@@ -93,4 +105,56 @@ export function useSchoolLiveDelivery() {
     ...result,
     date,
   };
+}
+
+export function useRequestPickupPlates() {
+  const queryClient = useQueryClient();
+  const [schoolId, setSchoolId] = useState<string | null>(null);
+
+  // Get school_id from session
+  useEffect(() => {
+    const fetchSession = async () => {
+      try {
+        const session = await getSessionClient();
+        setSchoolId(session.user?.school_id || null);
+      } catch (error) {
+        toast.error("Failed to fetch session");
+      }
+    };
+
+    fetchSession();
+  }, []);
+
+  return useMutation({
+    mutationFn: async (payload: RequestPickupPlatesPayload) => {
+      if (!schoolId) {
+        throw new Error("School ID not available");
+      }
+
+      return await fetchAPI("/v1/schools/request-pickup-plates", {
+        method: "POST",
+        body: JSON.stringify({
+          school_id: schoolId,
+          order_id: payload.order_id,
+          notes: payload.notes,
+          image_url: payload.image_url,
+          rating: payload.rating,
+        }),
+      });
+    },
+    onSuccess: () => {
+      // Invalidate and refetch the deliveries queries
+      queryClient.invalidateQueries({
+        queryKey: [{ key: "liveDelivery" }],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [{ key: "schoolDeliveries" }],
+      });
+      toast.success("Permintaan pengambilan piring berhasil dikirim");
+    },
+    onError: (error: unknown) => {
+      toast.error("Gagal mengirim permintaan pengambilan piring");
+      console.error("Error requesting plate pickup:", error);
+    },
+  });
 }

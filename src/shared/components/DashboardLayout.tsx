@@ -381,7 +381,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       {!isMobile && (
         <Sider
           breakpoint="lg"
-          collapsedWidth="0"
           style={{
             background: colorBgContainer,
             overflow: "auto",

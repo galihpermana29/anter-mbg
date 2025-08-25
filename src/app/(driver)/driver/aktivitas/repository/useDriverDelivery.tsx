@@ -27,6 +27,7 @@ export function useDriverDeliveries() {
   const date = query.get("date");
   const limit = query.get("limit") || "20";
   const status = query.get("status") || "";
+  const mode = query.get("mode") || "delivery";
 
   // Get driver_id from session
   useEffect(() => {
@@ -65,7 +66,7 @@ export function useDriverDeliveries() {
       }
 
       // Build the query string
-      let queryString = `/v1/deliveries?mode=delivery&driver_id=${driverId}&page=${page}&limit=${limit}&q=${search}&date=${date}`;
+      let queryString = `/v1/deliveries?mode=${mode}&driver_id=${driverId}&page=${page}&limit=${limit}&q=${search}&date=${date}`;
 
       // Add status filter if present
       if (status) {

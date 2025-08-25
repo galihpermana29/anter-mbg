@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 
 // Dynamically import the SchoolMaps component with SSR disabled
-const SchoolMaps = dynamic(() => import("./SchoolMaps"), {
+const SchoolMaps = dynamic(() => import("./SchoolMap"), {
   ssr: false,
   loading: () => (
     <div className="flex justify-center items-center h-[300px] bg-gray-50 rounded-lg">

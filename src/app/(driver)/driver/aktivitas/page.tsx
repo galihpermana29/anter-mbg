@@ -13,6 +13,7 @@ import {
   Input as AntInput,
   Button,
   message,
+  Segmented,
 } from "antd";
 import { Delivery } from "@/shared/models/delivery";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
@@ -122,8 +123,25 @@ export default function DriverAktivitasPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-[24px]">
+      <div className="flex items-start lg:items-center justify-between mb-[24px] flex-col lg:flex-row">
         <h1 className="text-[24px] font-[500]">Maps</h1>
+        <Segmented
+          defaultValue={"delivery"}
+          options={[
+            {
+              label: "Pengantaran",
+              value: "delivery",
+            },
+            {
+              label: "Pengambilan",
+              value: "pickup",
+            },
+          ]}
+          onChange={(value) => {
+            setUrlParams({ mode: value });
+            setUrlParams({ page: "1" });
+          }}
+        />
       </div>
       <DriverMaps />
       <div className="flex items-center justify-between mb-[24px]">

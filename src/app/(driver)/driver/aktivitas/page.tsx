@@ -27,6 +27,8 @@ import DeliveryCard from "./components/DeliveryCard";
 import toast from "react-hot-toast";
 import dynamic from "next/dynamic";
 import DraggerUpload from "@/shared/components/Uploader";
+import TrackingIcon from "@/shared/components/icons/TrackingIcon";
+import DeliveryIcon from "@/shared/components/icons/DeliveryIcon";
 const DriverMaps = dynamic(() => import("./components/DriverMaps"), {
   ssr: false,
 });
@@ -124,7 +126,10 @@ export default function DriverAktivitasPage() {
   return (
     <div>
       <div className="flex items-start lg:items-center justify-between mb-[24px] flex-col lg:flex-row">
-        <h1 className="text-[24px] font-[500]">Maps</h1>
+        <div className="flex items-center gap-[8px]">
+          <TrackingIcon isActive={true} />
+          <h1 className="text-[24px] font-[500]">Maps</h1>
+        </div>
         <Segmented
           defaultValue={"delivery"}
           options={[
@@ -145,7 +150,10 @@ export default function DriverAktivitasPage() {
       </div>
       <DriverMaps />
       <div className="flex items-center justify-between mb-[24px]">
-        <h1 className="text-[24px] font-[500]">Pengantaran</h1>
+        <div className="flex items-center gap-[8px]">
+          <DeliveryIcon isActive={true} />
+          <h1 className="text-[24px] font-[500]">Pengantaran</h1>
+        </div>
       </div>
       <ErrorBoundary error={error}>
         <div className="">

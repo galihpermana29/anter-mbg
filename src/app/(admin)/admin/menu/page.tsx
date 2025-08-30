@@ -10,6 +10,7 @@ import { Menu, IListMenu } from "@/shared/models/menu";
 import useListMenu from "./repository/useMenu";
 import { getUrlParams, setUrlParams } from "@/shared/usecase/url-params";
 import { jenjangDropdown } from "@/shared/models/dropdown";
+import MenuIcon from "@/shared/components/icons/MenuIcon";
 
 export default function MenuPage() {
   const router = useRouter();
@@ -104,7 +105,7 @@ export default function MenuPage() {
           <img
             src={image}
             alt="Menu"
-            style={{ width: "50px", height: "50px", objectFit: "cover" }}
+            style={{ width: "100px", height: "100px", objectFit: "cover" }}
           />
         ) : (
           "No Image"
@@ -136,7 +137,11 @@ export default function MenuPage() {
       <ErrorBoundary error={error}>
         <div className="mb-6">
           <div className="flex justify-between items-center mb-[24px]">
-            <h1 className="text-[24px] font-[500]">Menu</h1>
+            <div className="flex items-center gap-[8px] ">
+              <MenuIcon isActive={true} />
+              <h1 className="text-[24px] font-[500]">Menu</h1>
+            </div>
+
             <Button type="primary" onClick={handleAddMenu}>
               Tambah Menu
             </Button>

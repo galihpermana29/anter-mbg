@@ -81,12 +81,13 @@ export function useDriverDeliveries() {
   // Mutation for updating delivery status
   const updateStatusMutation = useMutation({
     mutationFn: async (payload: StatusUpdatePayload) => {
-      const { orderId, status, note } = payload;
+      const { orderId, status, note, proof_image_url } = payload;
       return await fetchAPI(`/v1/deliveries/${orderId}/status`, {
         method: "PATCH",
         body: JSON.stringify({
           status,
           note,
+          proof_image_url,
         }),
       });
     },

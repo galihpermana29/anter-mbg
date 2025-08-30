@@ -40,11 +40,11 @@ export function useLogin() {
         toast.success("Login berhasil");
 
         if (loginData.role === "KITCHEN") {
-          router.push("/admin/pesanan");
+          router.push("/admin/statistik");
         }
 
         if (loginData.role === "SCHOOL") {
-          router.push("/school/pesanan");
+          router.push("/school/aktivitas");
         }
 
         if (loginData.role === "DRIVER") {

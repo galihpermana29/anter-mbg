@@ -17,6 +17,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { orderStatusDropdown } from "@/shared/models/dropdown";
 import DeliveryCard from "@/app/(driver)/driver/aktivitas/components/DeliveryCard";
+import DeliveryIcon from "@/shared/components/icons/DeliveryIcon";
 
 export default function PengantaranPage() {
   const { data, isLoading, error, date } = useListDeliveries();
@@ -172,7 +173,11 @@ export default function PengantaranPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-[24px]">
-        <h1 className="text-[24px] font-[500]">Aktivitas</h1>
+        <div className="flex items-center gap-[8px]">
+          <DeliveryIcon isActive={true} />
+          <h1 className="text-[24px] font-[500]">Aktivitas</h1>
+        </div>
+
         <Segmented
           defaultValue={"delivery"}
           options={[
@@ -201,11 +206,9 @@ export default function PengantaranPage() {
               <Spin tip="Loading session data..." />
             ) : liveData!.data.length > 0 ? (
               liveData?.data.map((delivery) => (
-                <DeliveryCard
-                  key={delivery.order_id}
-                  mode="KITCHEN"
-                  delivery={delivery}
-                />
+                <div className="w-[300px]" key={delivery.order_id}>
+                  <DeliveryCard mode="KITCHEN" delivery={delivery} />
+                </div>
               ))
             ) : (
               <p>Tidak ada aktivitas berlangsung</p>

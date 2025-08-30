@@ -43,3 +43,33 @@ export interface ICreateSekolahPayload {
   notes: string;
   is_active: boolean;
 }
+
+export interface IResponseLogSekolah {
+  data: LogSekolah[];
+  status: string;
+  meta: Meta;
+}
+
+export interface LogSekolah {
+  id: string;
+  order_id: string;
+  school_id: string;
+  school_name: string;
+  date: string;
+  image_url: string;
+  rating: number;
+  notes: string;
+}
+
+export interface IStatsSekolah {
+  data: IStatsSekolahData;
+  status: string;
+}
+
+export interface IStatsSekolahData {
+  total_school_all: number;
+  total_school_tk: number;
+  total_school_sd: number;
+  total_school_smp: number;
+  total_school_sma: number;
+}

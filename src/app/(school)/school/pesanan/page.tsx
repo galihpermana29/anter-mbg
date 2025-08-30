@@ -11,6 +11,7 @@ import TableStatusBadge from "@/shared/components/TableStatusBadge";
 import { setUrlParams } from "@/shared/usecase/url-params";
 import { Button } from "antd";
 import { useRouter } from "next/navigation";
+import PesananIcon from "@/shared/components/icons/PesananIcon";
 
 export default function PesananPage() {
   const { data, isLoading, refetch, error } = useListPesanan();
@@ -63,7 +64,10 @@ export default function PesananPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-[24px]">
-        <h1 className="text-[24px] font-[500]">Pesanan</h1>
+        <div className="flex items-center gap-[8px]">
+          <PesananIcon isActive={true} />
+          <h1 className="text-[24px] font-[500]">Pesanan</h1>
+        </div>
         <Button
           type="primary"
           onClick={() => router.push("/school/pesanan/tambah")}

@@ -6,6 +6,8 @@ import { setUrlParams } from "@/shared/usecase/url-params";
 import useListSekolah from "./repository/useSekolah";
 import { useRouter } from "next/navigation";
 import { jenjangDropdown } from "@/shared/models/dropdown";
+import { Sekolah } from "@/shared/models/sekolah";
+import SekolahIcon from "@/shared/components/icons/SekolahIcon";
 
 const SekolahPage = () => {
   const { data, isLoading, refetch, error } = useListSekolah();
@@ -40,7 +42,7 @@ const SekolahPage = () => {
     {
       title: "Action",
       dataIndex: "action",
-      render: (text: string, record: any) => (
+      render: (text: string, record: Sekolah) => (
         <div className="flex gap-[8px]">
           <Button
             type="primary"
@@ -50,7 +52,17 @@ const SekolahPage = () => {
           >
             Edit
           </Button>
-          <Button type="default">Hapus</Button>
+          {/* <Button type="default">Hapus</Button> */}
+          <Button
+            type="default"
+            onClick={() => {
+              router.push(
+                `/admin/sekolah/log?id=${record.id}&school_name=${record.name}`
+              );
+            }}
+          >
+            Detail
+          </Button>
         </div>
       ),
     },
@@ -59,7 +71,11 @@ const SekolahPage = () => {
   return (
     <div>
       <div className="flex md:items-center justify-between md:flex-row flex-col mb-[24px] gap-[24px]">
-        <h1 className="text-[24px] font-[500]">Sekolah</h1>
+        <div className="flex items-center gap-[8px] ">
+          <SekolahIcon isActive={true} />
+          <h1 className="text-[24px] font-[500]">Sekolah</h1>
+        </div>
+
         <Button
           type="primary"
           onClick={() => {

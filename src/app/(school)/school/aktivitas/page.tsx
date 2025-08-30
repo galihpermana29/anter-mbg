@@ -31,6 +31,8 @@ import TextArea from "antd/es/input/TextArea";
 import { useState, useMemo } from "react";
 import { RequestPickupPlatesPayload } from "@/shared/models/pesanan";
 import ClientSideSchoolMaps from "./component/ClientSideSchoolMaps";
+import AktivitasIcon from "@/shared/components/icons/AktivitasIcon";
+import TrackingIcon from "@/shared/components/icons/TrackingIcon";
 
 export default function SchoolAktivitasPage() {
   const { data, isLoading, error, isSessionLoading, date } =
@@ -142,7 +144,11 @@ export default function SchoolAktivitasPage() {
   return (
     <div>
       <div className="flex items-start lg:items-center justify-between mb-[24px] flex-col lg:flex-row">
-        <h1 className="text-[24px] font-[500]">Aktivitas</h1>
+        <div className="flex items-center gap-[8px]">
+          <AktivitasIcon isActive={true} />
+          <h1 className="text-[24px] font-[500]">Aktivitas</h1>
+        </div>
+
         <Segmented
           defaultValue={"delivery"}
           options={[
@@ -165,9 +171,12 @@ export default function SchoolAktivitasPage() {
         <div className="flex flex-col lg:flex-row gap-[22px] min:h-[300px]  overflow-hidden">
           {liveData?.data && liveData?.data?.length > 0 && (
             <div className="w-full max-w-[300px] mb-[22px]  overflow-hidden h-full">
-              <h1 className="text-[16px] font-[500] mb-[12px]">
-                Aktivitas Berlangsung
-              </h1>
+              <div className="flex items-center gap-[8px] mb-[12px]">
+                <AktivitasIcon isActive={true} />
+                <h1 className="text-[16px] font-[500]">
+                  Aktivitas Berlangsung
+                </h1>
+              </div>
               {liveLoading ? (
                 <Spin size="large" tip="Loading session data..." />
               ) : (
@@ -190,7 +199,10 @@ export default function SchoolAktivitasPage() {
 
           {liveData && liveData?.data?.length > 0 && (
             <div className="w-full">
-              <h1 className="text-[16px] font-[500] mb-[12px]">Maps</h1>
+              <div className="flex items-center gap-[8px] mb-[12px]">
+                <TrackingIcon isActive={true} />
+                <h1 className="text-[16px] font-[500] ">Maps</h1>
+              </div>
               {liveData?.data && liveData.data[0] && (
                 <ClientSideSchoolMaps
                   orderId={activeOrderId}

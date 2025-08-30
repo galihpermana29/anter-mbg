@@ -81,6 +81,24 @@ export default function DeliveryCard({
         </Button>
       );
     }
+    if (delivery?.status === "Menuju Dapur" && mode === "DRIVER") {
+      return (
+        <Button
+          type="primary"
+          block
+          onClick={(e) => {
+            e.stopPropagation();
+            onStatusUpdate?.(delivery, {
+              status: "DELIVERED_PLATES",
+              title: "Selesai",
+              icon: <InboxOutlined />,
+            });
+          }}
+        >
+          Sampai Dapur
+        </Button>
+      );
+    }
 
     if (delivery?.status === "Makanan Diterima" && mode === "SCHOOL") {
       return (
@@ -106,7 +124,7 @@ export default function DeliveryCard({
   return (
     <Card
       hoverable
-      className="h-full w-full max-w-[300px]"
+      className="h-full w-full"
       onClick={() => onToggleExpand?.(delivery?.order_id || "")}
     >
       <div className="flex justify-between items-center mb-3">

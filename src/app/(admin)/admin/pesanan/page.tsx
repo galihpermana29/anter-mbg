@@ -1,15 +1,39 @@
 "use client";
 
-import { Input, Select, Table } from "antd";
+import { Button, Input, Modal, Select, Table } from "antd";
 import { useListPesanan } from "./repository/usePesanan";
 import TableStatusBadge from "@/shared/components/TableStatusBadge";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
 import { setUrlParams } from "@/shared/usecase/url-params";
 import { orderStatusDropdown } from "@/shared/models/dropdown";
+import { Pesanan } from "@/shared/models/pesanan";
+import { useState } from "react";
+import Image from "next/image";
+import PesananIcon from "@/shared/components/icons/PesananIcon";
 
 const PesananPage = () => {
   const { data, isLoading, refetch, error } = useListPesanan();
+  const [statusAction, setStatusAction] = useState<{
+    status: string;
+    title: string;
+    icon: React.ReactNode;
+  } | null>(null);
 
+  const [selectedOrder, setSelectedOrder] = useState<Pesanan | null>(null);
+
+  // Handle modal cancel
+  const handleCancel = () => {
+    setIsModalOpen(false);
+    setSelectedOrder(null);
+    setStatusAction(null);
+  };
+
+  const handleOpenOrderDetail = (order: Pesanan) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+  };
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const column = [
     {
       title: "ID",
@@ -40,11 +64,24 @@ const PesananPage = () => {
       dataIndex: "status",
       render: (text: string) => <TableStatusBadge status={text} />,
     },
+    {
+      title: "Detail",
+      render: (_: any, record: Pesanan) => {
+        return (
+          <Button type="primary" onClick={() => handleOpenOrderDetail(record)}>
+            Detail
+          </Button>
+        );
+      },
+    },
   ];
 
   return (
     <div>
-      <h1 className="text-[24px] font-[500] mb-[24px]">Pesanan</h1>
+      <div className="flex items-center gap-[8px] mb-[12px]">
+        <PesananIcon isActive={true} />
+        <h1 className="text-[24px] font-[500]">Pesanan</h1>
+      </div>
       <ErrorBoundary error={error}>
         <div className="">
           <div className="flex gap-[8px] md:flex-row flex-col mb-[24px]">
@@ -91,6 +128,30 @@ const PesananPage = () => {
             }}
             scroll={{ x: "max-content" }}
           />
+
+          <Modal
+            title={statusAction?.title || "Update Status"}
+            open={isModalOpen}
+            onCancel={handleCancel}
+            footer={null}
+          >
+            <div>
+              <h1 className="text-[16px] font-[500]">Bukti</h1>
+              {selectedOrder?.proof_image_url ? (
+                <Image
+                  src={selectedOrder?.proof_image_url || ""}
+                  alt="proof_url"
+                  width={500}
+                  height={500}
+                />
+              ) : (
+                "No Image"
+              )}
+
+              <h1 className="mt-[15px] text-[16px] font-[500]">Notes</h1>
+              <p>{selectedOrder?.notes}</p>
+            </div>
+          </Modal>
         </div>
       </ErrorBoundary>
     </div>

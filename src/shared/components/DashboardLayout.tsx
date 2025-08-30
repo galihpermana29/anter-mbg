@@ -13,9 +13,16 @@ import {
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
 import { Avatar, Breadcrumb, Dropdown, Layout, Menu, Space, theme } from "antd";
-import primaryLogo from "@/assets/primary-logo.png";
+import primaryLogo from "@/assets/logo-primary.png";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import StatistikIcon from "./icons/Statistik";
+import AktivitasIcon from "./icons/AktivitasIcon";
+import PesananIcon from "./icons/PesananIcon";
+import SekolahIcon from "./icons/SekolahIcon";
+import MenuIcon from "./icons/MenuIcon";
+import LogoutIcon from "@/assets/logout-icon.png";
+
 const { Header, Content, Footer, Sider } = Layout;
 
 type MenuItem = Required<MenuProps>["items"][number];
@@ -47,27 +54,33 @@ interface CustomMenuItem {
 // Define menu items with their corresponding routes
 const kitchenMenu: CustomMenuItem[] = [
   {
+    label: "Dashboard",
+    key: "dashboard",
+    icon: <StatistikIcon isActive={true} />,
+    route: "/admin/statistik",
+  },
+  {
     label: "Aktivitas",
     key: "aktivitas",
-    icon: <CarOutlined />,
+    icon: <AktivitasIcon isActive={false} />,
     route: "/admin/aktivitas",
   },
   {
     label: "Pesanan",
     key: "pesanan",
-    icon: <ShoppingCartOutlined />,
+    icon: <PesananIcon isActive={false} />,
     route: "/admin/pesanan",
   },
   {
     label: "Sekolah",
     key: "sekolah",
-    icon: <BookOutlined />,
+    icon: <SekolahIcon isActive={false} />,
     route: "/admin/sekolah",
   },
   {
     label: "Menu",
     key: "menu",
-    icon: <BookOutlined />,
+    icon: <MenuIcon isActive={false} />,
     route: "/admin/menu",
   },
 ];
@@ -76,50 +89,83 @@ const schoolMenu: CustomMenuItem[] = [
   {
     label: "Aktivitas",
     key: "aktivitas",
-    icon: <CarOutlined />,
+    icon: <AktivitasIcon isActive={false} />,
     route: "/school/aktivitas",
   },
   {
     label: "Pesanan",
     key: "pesanan",
-    icon: <ShoppingCartOutlined />,
+    icon: <PesananIcon isActive={false} />,
     route: "/school/pesanan",
   },
   {
     label: "Profile Sekolah",
     key: "sekolah",
-    icon: <BookOutlined />,
+    icon: <SekolahIcon isActive={false} />,
     route: "/school/profile",
   },
 ];
 
 const driverMenu: CustomMenuItem[] = [
   {
-    label: "Dashboard",
-    key: "dashboard",
-    icon: <DashboardOutlined />,
-    route: "/driver",
-  },
-  {
     label: "Aktivitas",
     key: "aktivitas",
-    icon: <CarOutlined />,
+    icon: <AktivitasIcon isActive={false} />,
     route: "/driver/aktivitas",
   },
 ];
 
 // Convert menu items to the format required by Ant Design
-const convertMenuItems = (menuItems: CustomMenuItem[]): MenuItem[] => {
+const convertMenuItems = (
+  menuItems: CustomMenuItem[],
+  selectedKeys: string[]
+): MenuItem[] => {
   return menuItems.map((item) => {
+    const isActive = selectedKeys.includes(item.key);
+
+    // Clone the icon and update isActive prop
+    let updatedIcon = item.icon;
+    if (React.isValidElement(item.icon)) {
+      updatedIcon = React.cloneElement(item.icon as React.ReactElement<any>, {
+        isActive: isActive,
+      });
+    }
+
+    // Create label with gap between icon and text
+    const labelWithGap = (
+      <div className="flex items-center gap-2">
+        {updatedIcon}
+        <span>{item.label}</span>
+      </div>
+    );
+
     if (item.children) {
       return getItem(
-        item.label,
+        labelWithGap,
         item.key,
-        item.icon,
-        item.children.map((child) => getItem(child.label, child.key))
+        null, // Remove icon from here since it's in the label
+        item.children.map((child) => {
+          const isChildActive = selectedKeys.includes(child.key);
+          let childIcon = child.icon;
+          if (React.isValidElement(child.icon)) {
+            childIcon = React.cloneElement(
+              child.icon as React.ReactElement<any>,
+              {
+                isActive: isChildActive,
+              }
+            );
+          }
+          return getItem(
+            <div className="flex items-center gap-2">
+              {childIcon}
+              <span>{child.label}</span>
+            </div>,
+            child.key
+          );
+        })
       );
     }
-    return getItem(item.label, item.key, item.icon);
+    return getItem(labelWithGap, item.key, null); // Remove icon from here since it's in the label
   });
 };
 
@@ -347,7 +393,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               <div
                 className={`h-[64px] px-[22px] flex items-center justify-start`}
               >
-                <h1>Kawal MBG</h1>
+                <Image src={primaryLogo} alt="logo" width={150} height={150} />
               </div>
               <div className="flex flex-col justify-between h-full">
                 {isLoading ? (
@@ -357,19 +403,21 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                     className={`${sidebarFocused ? "sidebar-focused" : ""}`}
                     selectedKeys={findSelectedKey()}
                     mode="inline"
-                    items={convertMenuItems(activeMenuItems)}
+                    items={convertMenuItems(activeMenuItems, findSelectedKey())}
                     onClick={handleMenuClick}
                     style={{
                       fontWeight: sidebarFocused ? 500 : 400,
                     }}
                   />
                 )}
-                <div
-                  className="p-[16px] text-red-700 cursor-pointer flex items-center gap-2 hover:bg-gray-100 mb-[100px]"
-                  onClick={handleLogout}
-                >
-                  <LogoutOutlined />
-                  <span className="font-[500]">Logout</span>
+                <div>
+                  <div
+                    className="p-[16px] text-red-700 cursor-pointer flex items-center gap-2 hover:bg-gray-100 mb-[100px]"
+                    onClick={handleLogout}
+                  >
+                    <LogoutOutlined />
+                    <span className="font-[500]">Logout</span>
+                  </div>
                 </div>
               </div>
             </Sider>
@@ -383,7 +431,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           breakpoint="lg"
           style={{
             background: colorBgContainer,
-            overflow: "auto",
+            // overflow: "auto",
             height: "100vh",
             position: "sticky",
             insetInlineStart: 0,
@@ -406,7 +454,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
           }}
         >
           <div className={`h-[64px] px-[22px] flex items-center justify-start`}>
-            <h1>Kawal MBG</h1>
+            <Image src={primaryLogo} alt="logo" width={150} height={150} />
           </div>
           <div className="flex flex-col justify-between h-full">
             {isLoading ? (
@@ -416,19 +464,22 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 className={`${sidebarFocused ? "sidebar-focused" : ""}`}
                 selectedKeys={findSelectedKey()}
                 mode="inline"
-                items={convertMenuItems(activeMenuItems)}
+                items={convertMenuItems(activeMenuItems, findSelectedKey())}
                 onClick={handleMenuClick}
                 style={{
                   fontWeight: sidebarFocused ? 500 : 400,
                 }}
               />
             )}
-            <div
-              className="p-[16px] text-red-700 cursor-pointer flex items-center gap-2 hover:bg-gray-100 mb-[100px]"
-              onClick={handleLogout}
-            >
-              <LogoutOutlined />
-              {!collapsed && <span className="font-[500]">Logout</span>}
+            <div>
+              <Image src={LogoutIcon} alt="logout" width={400} />
+              <div
+                className="p-[16px] text-red-700 cursor-pointer flex items-center gap-2 hover:bg-gray-100 mb-[100px]"
+                onClick={handleLogout}
+              >
+                <LogoutOutlined />
+                {!collapsed && <span className="font-[500]">Logout</span>}
+              </div>
             </div>
           </div>
         </Sider>
@@ -438,7 +489,9 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       <Layout>
         <Header style={{ padding: "0 16px", background: colorBgContainer }}>
           <div className="flex justify-between lg:justify-end">
-            <h1 className="lg:hidden">Kawal MBG</h1>
+            <div className="lg:hidden flex justify-center items-center">
+              <Image src={primaryLogo} alt="logo" width={150} height={150} />
+            </div>
             <div
               className={`cursor-pointer lg:hidden rounded-md transition-all ${
                 sidebarFocused ? "text-blue-700" : ""

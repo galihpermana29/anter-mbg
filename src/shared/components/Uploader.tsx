@@ -28,9 +28,9 @@ const DraggerUpload = ({
     fileList: newFileList,
     file,
   }) => {
-    if (file.size! > 2000000) {
-      return message.error("File size cannot be more than 2MB");
-    }
+    // if (file.size! > 2000000) {
+    //   return message.error("File size cannot be more than 2MB");
+    // }
     setFileList(newFileList);
   };
 
@@ -41,11 +41,10 @@ const DraggerUpload = ({
       setLoadingUpload(true);
       const { data } = await uploadImageWithApi(formData);
       setLoadingUpload(false);
-
+      message.success("File berhasil diunggah");
       return data?.data;
     } catch (error) {
-      // const msg = generateErrorMsg(error as AxiosError);
-      // showPopError(msg);
+      message.error("Gagal mengunggah file");
       setLoadingUpload(false);
     }
   };

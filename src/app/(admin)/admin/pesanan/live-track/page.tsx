@@ -17,7 +17,7 @@ const LiveTrackPage = () => {
     <div className="">
       <div className="mb-4">
         <Link
-          href="/admin/aktivitas/pengantaran"
+          href="/admin/aktivitas"
           className="flex items-center text-blue-500 hover:underline"
         >
           <ArrowLeftOutlined className="mr-2" /> Kembali ke Daftar Aktivitas
@@ -75,7 +75,10 @@ const LiveTrackPage = () => {
           </Card>
 
           <div>
-            <ClientSideKitchenMap orderData={data?.data} isLoading={isLoading} />
+            <ClientSideKitchenMap
+              orderData={data?.data}
+              isLoading={isLoading}
+            />
             <div className="mt-4 text-sm text-gray-500">
               <p>🚗 - Lokasi Driver</p>
               <p>🏫 - Lokasi Sekolah</p>

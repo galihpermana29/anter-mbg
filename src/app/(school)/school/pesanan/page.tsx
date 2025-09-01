@@ -24,12 +24,12 @@ export default function PesananPage() {
       key: "id",
     },
     {
-      title: "Kitchen",
+      title: "Nama Dapur",
       dataIndex: "kitchen_name",
       key: "kitchen_name",
     },
     {
-      title: "Portion",
+      title: "Porsi",
       dataIndex: "portion",
       key: "portion",
       width: 100,
@@ -42,19 +42,19 @@ export default function PesananPage() {
       render: (text: string) => <TableStatusBadge status={text} />,
     },
     {
-      title: "Deliver Before",
+      title: "Diantar Sebelum",
       dataIndex: "deliver_before",
       key: "deliver_before",
       width: 180,
     },
     {
-      title: "Ordered For",
+      title: "Dipesan untuk",
       dataIndex: "ordered_for",
       key: "ordered_for",
       width: 180,
     },
     {
-      title: "Notes",
+      title: "Catatan",
       dataIndex: "notes",
       key: "notes",
       width: 180,

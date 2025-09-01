@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { getSessionClient } from "../session/get-session-client";
 
 export const API_URl = process.env.NEXT_PUBLIC_API_URL;

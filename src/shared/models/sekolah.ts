@@ -73,3 +73,24 @@ export interface IStatsSekolahData {
   total_school_smp: number;
   total_school_sma: number;
 }
+
+export interface IResponseProfileSekolah {
+  data: ProfileSekolah;
+  status: string;
+}
+
+export interface ProfileSekolah {
+  id: string;
+  kitchen_id: string;
+  kitchen_name: string;
+  name: string;
+  address: string;
+  category: string;
+  latitude: number;
+  longitude: number;
+  contact_person: string;
+  contact_email: string;
+  contact_phone: string;
+  notes: string;
+  is_active: boolean;
+}

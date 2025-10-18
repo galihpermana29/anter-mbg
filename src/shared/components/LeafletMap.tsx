@@ -9,13 +9,17 @@ interface LeafletMapProps {
   longitude: number | null;
   height?: string;
   zoom?: number;
+  onLocationSelect?: (lat: number, lng: number) => void;
+  draggable?: boolean;
 }
 
 const LeafletMap = ({ 
   latitude, 
   longitude, 
   height = '300px', 
-  zoom = 15 
+  zoom = 15,
+  onLocationSelect,
+  draggable = true
 }: LeafletMapProps) => {
   useEffect(() => {
     // Skip map initialization if coordinates are not available
@@ -48,13 +52,32 @@ const LeafletMap = ({
     }).addTo(map);
 
     // Add marker at the specified location
-    L.marker([latitude, longitude]).addTo(map);
+    const marker = L.marker([latitude, longitude], {
+      draggable: draggable
+    }).addTo(map);
+
+    // Handle marker drag event
+    if (draggable && onLocationSelect) {
+      marker.on('dragend', function(e) {
+        const position = e.target.getLatLng();
+        onLocationSelect(position.lat, position.lng);
+      });
+    }
+
+    // Handle map click event to move marker
+    if (onLocationSelect) {
+      map.on('click', function(e) {
+        const { lat, lng } = e.latlng;
+        marker.setLatLng([lat, lng]);
+        onLocationSelect(lat, lng);
+      });
+    }
 
     // Cleanup function
     return () => {
       map.remove();
     };
-  }, [latitude, longitude, zoom]);
+  }, [latitude, longitude, zoom, onLocationSelect, draggable]);
 
   return (
     <div id="map" style={{ height, width: '100%', borderRadius: '8px' }}>

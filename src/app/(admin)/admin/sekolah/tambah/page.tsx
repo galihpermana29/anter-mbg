@@ -3,6 +3,7 @@
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
 import { jenjangDropdown } from "@/shared/models/dropdown";
 import {
+  AutoComplete,
   Button,
   Col,
   Form,
@@ -13,7 +14,7 @@ import {
   message,
 } from "antd";
 import { useGeolocation } from "@/shared/hooks/useGeolocation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import {
   useCreateSekolah,
@@ -29,6 +30,13 @@ const LeafletMap = dynamic(() => import("@/shared/components/LeafletMap"), {
   ssr: false,
 });
 
+interface LocationOption {
+  value: string;
+  label: string;
+  lat: number;
+  lon: number;
+}
+
 const TambahSekolahPage = () => {
   const [form] = Form.useForm();
   const { loading, error, position, getCurrentPosition } = useGeolocation();
@@ -39,6 +47,9 @@ const TambahSekolahPage = () => {
     latitude: null,
     longitude: null,
   });
+  const [searchOptions, setSearchOptions] = useState<LocationOption[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const query = useSearchParams();
   const schoolId = query.get("id");
   const isEditMode = !!schoolId;
@@ -100,6 +111,99 @@ const TambahSekolahPage = () => {
     getCurrentPosition();
     if (error) {
       message.error(`Gagal mendapatkan lokasi: ${error}`);
+    }
+  };
+
+  // Handle location search using Nominatim API with debounce
+  const handleLocationSearch = useCallback((searchText: string) => {
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (!searchText || searchText.length < 3) {
+      setSearchOptions([]);
+      setSearchLoading(false);
+      return;
+    }
+
+    setSearchLoading(true);
+
+    // Debounce the API call by 500ms
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            searchText
+          )}&limit=5&addressdetails=1`
+        );
+        const data = await response.json();
+
+        const options: LocationOption[] = data.map((item: any) => ({
+          value: item.display_name,
+          label: item.display_name,
+          lat: parseFloat(item.lat),
+          lon: parseFloat(item.lon),
+        }));
+
+        setSearchOptions(options);
+      } catch (err) {
+        message.error("Gagal mencari lokasi");
+        console.error(err);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 500);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Handle location selection from search
+  const handleLocationSelect = (value: string, option: LocationOption) => {
+    form.setFieldsValue({
+      address: value,
+      latitude: option.lat.toString(),
+      longitude: option.lon.toString(),
+    });
+
+    setMapCoordinates({
+      latitude: option.lat,
+      longitude: option.lon,
+    });
+  };
+
+  // Handle map click/drag to update coordinates
+  const handleMapLocationSelect = async (lat: number, lng: number) => {
+    form.setFieldsValue({
+      latitude: lat.toString(),
+      longitude: lng.toString(),
+    });
+
+    setMapCoordinates({
+      latitude: lat,
+      longitude: lng,
+    });
+
+    // Reverse geocode to get address
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+      );
+      const data = await response.json();
+      if (data.display_name) {
+        form.setFieldsValue({
+          address: data.display_name,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to reverse geocode:", err);
     }
   };
 
@@ -175,6 +279,8 @@ const TambahSekolahPage = () => {
                 <LeafletMap
                   latitude={mapCoordinates.latitude}
                   longitude={mapCoordinates.longitude}
+                  onLocationSelect={handleMapLocationSelect}
+                  draggable={true}
                 />
               </div>
             </Row>
@@ -182,8 +288,14 @@ const TambahSekolahPage = () => {
               label="Alamat"
               name={"address"}
               rules={[{ required: true, message: "Please input address!" }]}
+              tooltip="Cari lokasi atau klik pada peta untuk memilih lokasi"
             >
-              <Input placeholder="Alamat" />
+              <AutoComplete
+                options={searchOptions}
+                onSearch={handleLocationSearch}
+                onSelect={handleLocationSelect}
+                placeholder="Cari alamat atau klik pada peta"
+              />
             </Form.Item>
             <Row gutter={[16, 16]}>
               <Col span={12}>

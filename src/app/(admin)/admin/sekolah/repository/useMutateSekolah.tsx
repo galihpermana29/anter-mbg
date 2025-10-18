@@ -106,3 +106,37 @@ export function useEditSekolah(schoolId: string | undefined | null) {
     error,
   };
 }
+
+export function useEditSekolahProfile(schoolId: string | undefined | null) {
+  const { mutate, isPending, isError, error } = useMutation({
+    mutationFn: async (data: ICreateSekolahPayload) => {
+      const sessionString = await getSessionString();
+      const session = JSON.parse(sessionString);
+      const response = await fetchAPI<ICreateSekolahPayload>(
+        `/v1/schools/${schoolId}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            ...data,
+            kitchen_id: session?.kitchen_id,
+          }),
+        }
+      );
+      return response;
+    },
+
+    onSuccess: () => {
+      toast.success("Profil sekolah berhasil diperbarui");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  return {
+    mutate,
+    isPending,
+    isError,
+    error,
+  };
+}

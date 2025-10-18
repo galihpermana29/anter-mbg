@@ -18,6 +18,7 @@ import {
 import { Delivery } from "@/shared/models/delivery";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
 import { setUrlParams } from "@/shared/usecase/url-params";
+import { useSearchParams } from "next/navigation";
 import { SearchOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { orderStatusDropdown } from "@/shared/models/dropdown";
@@ -34,6 +35,9 @@ const DriverMaps = dynamic(() => import("./components/DriverMaps"), {
 });
 
 export default function DriverAktivitasPage() {
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode") || "delivery";
+  
   const {
     data,
     isLoading,
@@ -131,7 +135,7 @@ export default function DriverAktivitasPage() {
           <h1 className="text-[24px] font-[500]">Maps</h1>
         </div>
         <Segmented
-          defaultValue={"delivery"}
+          value={mode}
           options={[
             {
               label: "Pengantaran",
@@ -152,7 +156,9 @@ export default function DriverAktivitasPage() {
       <div className="flex items-center justify-between mb-[24px]">
         <div className="flex items-center gap-[8px]">
           <DeliveryIcon isActive={true} />
-          <h1 className="text-[24px] font-[500]">Pengantaran</h1>
+          <h1 className="text-[24px] font-[500]">
+            {mode === "delivery" ? "Pengantaran" : "Pengambilan"}
+          </h1>
         </div>
       </div>
       <ErrorBoundary error={error}>

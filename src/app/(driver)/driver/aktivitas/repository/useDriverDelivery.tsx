@@ -28,7 +28,6 @@ export function useDriverDeliveries() {
   const limit = query.get("limit") || "20";
   const status = query.get("status") || "";
   const mode = query.get("mode") || "delivery";
-
   // Get driver_id from session
   useEffect(() => {
     const fetchSession = async () => {
@@ -54,7 +53,7 @@ export function useDriverDeliveries() {
   // Fetch data using React Query
   const result = useQuery({
     queryKey: [
-      { key: "driverDeliveries", driverId, page, search, date, limit, status },
+      { key: "driverDeliveries", driverId, page, search, date, limit, status, mode },
     ],
     queryFn: async () => {
       if (!driverId) {

@@ -493,16 +493,15 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               <Image src={primaryLogo} alt="logo" width={150} height={150} />
             </div>
             <div
-              className={`cursor-pointer lg:hidden rounded-md transition-all ${
-                sidebarFocused ? "text-blue-700" : ""
-              }`}
+              className={`cursor-pointer lg:hidden rounded-md transition-all ${sidebarFocused ? "text-blue-700" : ""
+                }`}
               onClick={toggleSidebarFocus}
               title={
                 collapsed
                   ? "Show Sidebar"
                   : sidebarFocused
-                  ? "Close Sidebar"
-                  : "Focus Sidebar"
+                    ? "Close Sidebar"
+                    : "Focus Sidebar"
               }
             >
               <MenuOutlined style={{ fontSize: "18px" }} />
@@ -515,6 +514,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                       key: "1",
                       label: "Logout",
                       icon: <LogoutOutlined />,
+                      onClick: handleLogout,
                     },
                   ],
                 }}

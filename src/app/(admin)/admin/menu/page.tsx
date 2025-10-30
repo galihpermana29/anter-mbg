@@ -97,6 +97,11 @@ export default function MenuPage() {
       key: "category",
     },
     {
+      title: "Tanggal Ditambahkan",
+      dataIndex: "date",
+      key: "date",
+    },
+    {
       title: "Gambar",
       dataIndex: "image_url",
       key: "image_url",

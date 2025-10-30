@@ -4,12 +4,13 @@ import { Card, Button } from "antd";
 import { Delivery } from "@/shared/models/delivery";
 import TableStatusBadge from "@/shared/components/TableStatusBadge";
 import { CarOutlined, CheckOutlined, InboxOutlined } from "@ant-design/icons";
-import { formatDepartureTime } from "@/shared/utils/date-formatter";
+import { formatDepartureTime, formatTimeOnly } from "@/shared/utils/date-formatter";
 import Link from "next/link";
 
 interface DeliveryCardProps {
   delivery: Delivery | null;
   mode?: "SCHOOL" | "DRIVER" | "KITCHEN";
+  type?: 'delivery' | 'pickup'
   onToggleExpand?: (orderId: string) => void;
   onStatusUpdate?: (
     delivery: Delivery,
@@ -22,6 +23,7 @@ export default function DeliveryCard({
   mode = "DRIVER",
   onToggleExpand,
   onStatusUpdate,
+  type = 'delivery'
 }: DeliveryCardProps) {
   // Get action button based on status
   const getActionButton = () => {
@@ -148,11 +150,11 @@ export default function DeliveryCard({
           <span className="font-medium">Waktu Berangkat:</span>{" "}
           {delivery?.departe_time === "00:00"
             ? "-"
-            : formatDepartureTime(delivery?.departe_time || "")}
+            : formatTimeOnly(delivery?.departe_time || "")}
         </p>
         <p className="mb-1">
-          <span className="font-medium">Antar Sebelum:</span>{" "}
-          {delivery?.deliver_before}
+          <span className="font-medium">{type === 'pickup' ? 'Waktu Selesai' : 'Antar Sebelum'}:</span>{" "}
+          {formatDepartureTime(delivery?.deliver_before || "")}
         </p>
         {["SCHOOL", "KITCHEN"].includes(mode) ? (
           <p className="mb-1">

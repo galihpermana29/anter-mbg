@@ -46,6 +46,43 @@ export function useListPesanan() {
   };
 }
 
+export function useExportPesanan() {
+  const search = getUrlParams("search") || "";
+  const status = getUrlParams("status") || "";
+
+  const { data, isFetching, isError, error, refetch } = useQuery({
+    queryKey: [
+      {
+        key: "export-pesanan",
+        search,
+        status,
+      },
+    ],
+    queryFn: async ({ signal }) => {
+      const search = getUrlParams("search") || "";
+      const status = getUrlParams("status") || "";
+
+      const response = await fetchAPI<IListPesanan>(
+        `/v1/orders?limit=999&page=1&q=${search}&status=${status}`,
+        {
+          signal,
+        }
+      );
+
+      return response;
+    },
+    enabled: false, // Only run when manually triggered
+  });
+
+  return {
+    data,
+    isLoading: isFetching,
+    isError,
+    error,
+    refetch,
+  };
+}
+
 export function useGetDetailOrderById(orderId: string) {
   const { data, isFetching, isError, error, refetch } = useQuery({
     queryKey: [

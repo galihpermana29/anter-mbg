@@ -331,8 +331,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
       .filter((segment) => segment !== "");
 
     // Create breadcrumb items from path segments
-    return [
-      { title: "Home", href: "/" },
+    const items = [
+      { title: "Home" }, // Remove href from Home to make it non-clickable
       ...pathSegments.map((segment, index) => {
         // Create the href for this segment (all segments up to this point)
         const href = `/${pathSegments.slice(0, index + 1).join("/")}`;
@@ -340,9 +340,13 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         // Capitalize the first letter of each segment for better display
         const title = segment.charAt(0).toUpperCase() + segment.slice(1);
 
-        return { title, href };
+        // Only add href to the last item to make it clickable
+        const isLastItem = index === pathSegments.length - 1;
+        return isLastItem ? { title, href } : { title };
       }),
     ];
+
+    return items;
   }, [pathname]);
 
   return (

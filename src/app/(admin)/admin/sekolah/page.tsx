@@ -61,10 +61,11 @@ const SekolahPage = () => {
               );
             }}
           >
-            Detail
+            Log
           </Button>
         </div>
       ),
+      fixed: "right",
     },
   ];
 
@@ -119,7 +120,7 @@ const SekolahPage = () => {
             />
           </div>
           <Table
-            columns={column}
+            columns={column as any}
             dataSource={data?.data}
             loading={isLoading}
             pagination={{

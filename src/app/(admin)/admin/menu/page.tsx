@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Col, Input, Row, Select, Table } from "antd";
+import { Button, Col, Image, Input, Row, Select, Table } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -102,11 +102,18 @@ export default function MenuPage() {
       key: "image_url",
       render: (image: string) =>
         image ? (
-          <img
+          <Image
             src={image}
             alt="Menu"
-            style={{ width: "100px", height: "100px", objectFit: "cover" }}
+            width={100}
+            height={100}
+            style={{ objectFit: "cover" }}
           />
+          // <img
+          //   src={image}
+          //   alt="Menu"
+          //   style={{ width: "100px", height: "100px", objectFit: "cover" }}
+          // />
         ) : (
           "No Image"
         ),

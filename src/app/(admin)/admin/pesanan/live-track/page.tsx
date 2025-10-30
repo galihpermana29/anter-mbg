@@ -6,6 +6,7 @@ import ClientSideKitchenMap from "../component/ClientSideKitchenMap";
 import { Card, Spin, Alert } from "antd";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import Link from "next/link";
+import { formatDepartureTime } from "@/shared/utils/date-formatter";
 
 const LiveTrackPage = () => {
   const query = useSearchParams();
@@ -62,7 +63,7 @@ const LiveTrackPage = () => {
                     {data.data.driver?.name || "Belum ditugaskan"}
                   </p>
                   <p>
-                    <strong>Antar Sebelum:</strong> {data.data.deliver_before}
+                    <strong>Antar Sebelum:</strong> {formatDepartureTime(data.data.deliver_before || "")}
                   </p>
                   <p>
                     <strong>Porsi:</strong> {data.data.portion}

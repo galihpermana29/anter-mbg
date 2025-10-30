@@ -1,6 +1,6 @@
 "use client";
 
-import { Table } from "antd";
+import { Image, Table } from "antd";
 import { useRouter, useSearchParams } from "next/navigation";
 import useLogSekolah from "./repository/useLogSekolah";
 import { setUrlParams } from "@/shared/usecase/url-params";
@@ -27,11 +27,18 @@ const LogSekolah = () => {
       title: "Bukti",
       dataIndex: "image_url",
       render: (text: string) => (
-        <img
+        <Image
           src={text}
           alt="proof"
-          style={{ width: "100px", height: "100px" }}
+          width={100}
+          height={100}
+          style={{ objectFit: "cover" }}
         />
+        // <img
+        //   src={text}
+        //   alt="proof"
+        //   style={{ width: "100px", height: "100px" }}
+        // />
       ),
     },
     {

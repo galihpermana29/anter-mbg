@@ -11,8 +11,8 @@ import toast from "react-hot-toast";
 interface StatusUpdatePayload {
   orderId: string;
   status: string;
-  note: string;
-  proof_image_url: string;
+  note?: string;
+  proof_image_url?: string;
 }
 
 export function useDriverDeliveries() {

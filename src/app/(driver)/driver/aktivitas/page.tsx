@@ -37,7 +37,7 @@ const DriverMaps = dynamic(() => import("./components/DriverMaps"), {
 export default function DriverAktivitasPage() {
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") || "delivery";
-  
+
   const {
     data,
     isLoading,
@@ -101,7 +101,17 @@ export default function DriverAktivitasPage() {
   ) => {
     setSelectedDelivery(delivery);
     setStatusAction(action);
-    setIsModalOpen(true);
+
+    if (action.status === "DELIVERED" && action.title === 'Tiba di Sekolah') {
+      setIsModalOpen(true);
+    } else {
+      updateStatusMutation.mutate({
+        orderId: delivery.order_id,
+        status: action.status,
+      });
+    }
+
+
     form.resetFields();
   };
 
@@ -208,6 +218,7 @@ export default function DriverAktivitasPage() {
                     key={delivery.order_id}
                   >
                     <DeliveryCard
+                      type={mode as any}
                       delivery={delivery}
                       onToggleExpand={toggleCardExpansion}
                       onStatusUpdate={handleStatusButtonClick}

@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, Input, Modal, Select, Table } from "antd";
-import { useListPesanan } from "./repository/usePesanan";
+import { Button, Input, Modal, Select, Table, message } from "antd";
+import { useListPesanan, useExportPesanan } from "./repository/usePesanan";
 import TableStatusBadge from "@/shared/components/TableStatusBadge";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
 import { setUrlParams } from "@/shared/usecase/url-params";
@@ -10,9 +10,12 @@ import { Pesanan } from "@/shared/models/pesanan";
 import { useState } from "react";
 import Image from "next/image";
 import PesananIcon from "@/shared/components/icons/PesananIcon";
+import * as XLSX from "xlsx";
+import { formatDepartureTime, formatTime, formatTimeOnly } from "@/shared/utils/date-formatter";
 
 const PesananPage = () => {
   const { data, isLoading, refetch, error } = useListPesanan();
+  const { data: exportData, isLoading: isExporting, refetch: refetchExport } = useExportPesanan();
   const [statusAction, setStatusAction] = useState<{
     status: string;
     title: string;
@@ -34,6 +37,43 @@ const PesananPage = () => {
   };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // XLSX Export functionality
+  const handleExportXLSX = async () => {
+    try {
+      await refetchExport();
+
+      if (exportData?.data) {
+        // Format data for XLSX export based on table columns
+        const xlsxData = exportData.data.map((item: Pesanan) => ({
+          'ID': item.id,
+          'Sekolah': item.school_name,
+          'Waktu Antar': item.deliver_before,
+          'Diterima': item.picked_up_time,
+          'Driver Antar': item.driver_name,
+          'Driver Pickup': item.driver_name,
+          'Status': item.status,
+        }));
+
+        // Create workbook and worksheet
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(xlsxData);
+
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Pesanan');
+
+        // Generate filename with current date
+        const filename = `pesanan-export-${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        // Save file
+        XLSX.writeFile(wb, filename);
+
+        message.success('Data exported successfully!');
+      }
+    } catch (error) {
+      message.error('Failed to export data');
+    }
+  };
   const column = [
     {
       title: "ID",
@@ -46,10 +86,12 @@ const PesananPage = () => {
     {
       title: "Waktu Antar",
       dataIndex: "deliver_before",
+      // render: (time: string) => (time === "00:00" ? "-" : formatDepartureTime(time || "")),
     },
     {
       title: "Diterima",
-      dataIndex: "picked_up_time",
+      dataIndex: "delivered_time",
+      render: (time: string) => (time === "00:00" ? "-" : formatTimeOnly(time || "")),
     },
     {
       title: "Driver Antar",
@@ -73,7 +115,9 @@ const PesananPage = () => {
           </Button>
         );
       },
+      fixed: "right",
     },
+
   ];
 
   return (
@@ -84,38 +128,48 @@ const PesananPage = () => {
       </div>
       <ErrorBoundary error={error}>
         <div className="">
-          <div className="flex gap-[8px] md:flex-row flex-col mb-[24px]">
-            <Input
-              allowClear
-              onClear={() => {
-                setUrlParams({ page: 1 });
-                refetch();
-              }}
-              onPressEnter={() => {
-                refetch();
-              }}
-              placeholder="Cari pesanan"
-              className="max-w-[400px]"
-              onChange={(e) =>
-                setUrlParams({ search: e.target.value, page: 1 })
-              }
-            />
-            <Select
-              allowClear
-              onClear={() => {
-                setUrlParams({ page: 1 });
-                refetch();
-              }}
-              options={orderStatusDropdown}
-              placeholder="Pilih Status"
-              onChange={(value: string) => {
-                setUrlParams({ status: value, page: 1 });
-                refetch();
-              }}
-            />
+          <div className="flex items-center gap-[8px] mb-[24px]">
+            <div className="flex gap-[8px] md:flex-row flex-col w-full">
+              <Input
+                allowClear
+                onClear={() => {
+                  setUrlParams({ page: 1 });
+                  refetch();
+                }}
+                onPressEnter={() => {
+                  refetch();
+                }}
+                placeholder="Cari pesanan"
+                className="max-w-[400px]"
+                onChange={(e) =>
+                  setUrlParams({ search: e.target.value, page: 1 })
+                }
+              />
+              <Select
+                allowClear
+                onClear={() => {
+                  setUrlParams({ page: 1 });
+                  refetch();
+                }}
+                options={orderStatusDropdown}
+                placeholder="Pilih Status"
+                onChange={(value: string) => {
+                  setUrlParams({ status: value, page: 1 });
+                  refetch();
+                }}
+              />
+            </div>
+            <Button
+              type="primary"
+              className=""
+              onClick={handleExportXLSX}
+              loading={isExporting}
+            >
+              Export to Excel
+            </Button>
           </div>
           <Table
-            columns={column}
+            columns={column as any}
             dataSource={data?.data}
             loading={isLoading}
             pagination={{

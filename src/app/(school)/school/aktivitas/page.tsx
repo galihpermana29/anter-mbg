@@ -33,6 +33,7 @@ import { RequestPickupPlatesPayload } from "@/shared/models/pesanan";
 import ClientSideSchoolMaps from "./component/ClientSideSchoolMaps";
 import AktivitasIcon from "@/shared/components/icons/AktivitasIcon";
 import TrackingIcon from "@/shared/components/icons/TrackingIcon";
+import { formatDepartureTime, formatTimeOnly } from "@/shared/utils/date-formatter";
 
 export default function SchoolAktivitasPage() {
   const { data, isLoading, error, isSessionLoading, date } =
@@ -44,7 +45,7 @@ export default function SchoolAktivitasPage() {
     error: liveError,
   } = useSchoolLiveDelivery();
   const activeOrderId = liveData?.data?.[0]?.order_id || "";
-
+  const mode = getUrlParams("mode");
   const [form] = Form.useForm();
 
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(
@@ -66,18 +67,20 @@ export default function SchoolAktivitasPage() {
       key: "portion",
       width: 100,
     },
-    {
-      title: "Antar Sebelum",
-      dataIndex: "deliver_before",
-      key: "deliver_before",
-      width: 120,
-    },
+
     {
       title: "Waktu Berangkat",
       dataIndex: "departe_time",
       key: "departe_time",
       width: 150,
-      render: (time) => (time === "00:00" ? "-" : time),
+      render: (time) => (time === "00:00" ? "-" : formatTimeOnly(time || "")),
+    },
+    {
+      title: mode === 'pickup' ? "Waktu Selesai" : "Antar Sebelum",
+      dataIndex: "deliver_before",
+      key: "deliver_before",
+      render: (time) => (time === "00:00" ? "-" : formatDepartureTime(time || "")),
+      width: 120,
     },
     {
       title: "Driver",
@@ -181,6 +184,7 @@ export default function SchoolAktivitasPage() {
                 <Spin size="large" tip="Loading session data..." />
               ) : (
                 <DeliveryCard
+                  type={mode as any}
                   onStatusUpdate={() => {
                     setSelectedDelivery(liveData?.data[0] || null);
                     setStatusAction({
@@ -209,9 +213,9 @@ export default function SchoolAktivitasPage() {
                   schoolPosition={
                     liveData.data[0].school
                       ? ([
-                          liveData.data[0].school.latitude,
-                          liveData.data[0].school.longitude,
-                        ] as [number, number])
+                        liveData.data[0].school.latitude,
+                        liveData.data[0].school.longitude,
+                      ] as [number, number])
                       : undefined
                   }
                 />
@@ -222,9 +226,8 @@ export default function SchoolAktivitasPage() {
       </ErrorBoundary>
       <ErrorBoundary error={error}>
         <div
-          className={`${
-            liveData && liveData?.data?.length > 0 ? "mt-[22px]" : ""
-          }`}
+          className={`${liveData && liveData?.data?.length > 0 ? "mt-[22px]" : ""
+            }`}
         >
           <h1 className="text-[16px] font-[500] mb-[12px]">
             Aktivitas Yang Akan Datang

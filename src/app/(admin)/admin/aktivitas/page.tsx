@@ -18,13 +18,14 @@ import { useState } from "react";
 import { orderStatusDropdown } from "@/shared/models/dropdown";
 import DeliveryCard from "@/app/(driver)/driver/aktivitas/components/DeliveryCard";
 import DeliveryIcon from "@/shared/components/icons/DeliveryIcon";
+import { formatDepartureTime, formatTime, formatTimeOnly } from "@/shared/utils/date-formatter";
 
 export default function PengantaranPage() {
   const { data, isLoading, error, date } = useListDeliveries();
   const { data: driverOptions, isLoading: isLoadingDrivers } =
     useDriverOptions();
   const { mutate: assignDriver } = useAssignDriver();
-
+  const mode = getUrlParams("mode");
   const {
     data: liveData,
     isLoading: liveLoading,
@@ -71,18 +72,20 @@ export default function PengantaranPage() {
       width: 100,
     },
     {
-      title: "Antar Sebelum",
-      dataIndex: "deliver_before",
-      key: "deliver_before",
-      width: 120,
-    },
-    {
       title: "Waktu Berangkat",
       dataIndex: "departe_time",
       key: "departe_time",
       width: 150,
-      render: (time) => (time === "00:00" ? "-" : time),
+      render: (time: string) => (time === "00:00" ? "-" : formatTimeOnly(time || "")),
     },
+    {
+      title: mode === 'pickup' ? "Waktu Selesai" : "Antar Sebelum",
+      dataIndex: "deliver_before",
+      key: "deliver_before",
+      width: 120,
+      render: (time) => (time === "00:00" ? "-" : formatTimeOnly(time || "")),
+    },
+
     {
       title: "Driver",
       key: "driver",
@@ -207,7 +210,7 @@ export default function PengantaranPage() {
             ) : liveData!.data.length > 0 ? (
               liveData?.data.map((delivery) => (
                 <div className="w-[300px]" key={delivery.order_id}>
-                  <DeliveryCard mode="KITCHEN" delivery={delivery} />
+                  <DeliveryCard type={mode as any} mode="KITCHEN" delivery={delivery} />
                 </div>
               ))
             ) : (

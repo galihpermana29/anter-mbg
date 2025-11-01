@@ -53,6 +53,7 @@ const PesananPage = () => {
           'Driver Antar': item.driver_name,
           'Driver Pickup': item.driver_name,
           'Status': item.status,
+          'Bukti': item.proof_image_url
         }));
 
         // Create workbook and worksheet

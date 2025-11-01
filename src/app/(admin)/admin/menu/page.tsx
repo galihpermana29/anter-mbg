@@ -1,16 +1,17 @@
 "use client";
 
-import { Button, Col, Image, Input, Row, Select, Table } from "antd";
+import { Button, Col, Image, Input, Row, Select, Table, message } from "antd";
 import { ColumnsType } from "antd/es/table";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
 import { Menu, IListMenu } from "@/shared/models/menu";
-import useListMenu from "./repository/useMenu";
+import useListMenu, { useExportMenu } from "./repository/useMenu";
 import { getUrlParams, setUrlParams } from "@/shared/usecase/url-params";
 import { jenjangDropdown } from "@/shared/models/dropdown";
 import MenuIcon from "@/shared/components/icons/MenuIcon";
+import * as XLSX from "xlsx";
 
 export default function MenuPage() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function MenuPage() {
 
   // Fetch menu data
   const { data, isLoading, error, refetch } = useListMenu();
+  const { data: exportData, isLoading: isExporting, refetch: refetchExport } = useExportMenu();
 
   // Update URL params when search or category changes
   useEffect(() => {
@@ -79,10 +81,46 @@ export default function MenuPage() {
     router.push("/admin/menu/tambah");
   };
 
+  // XLSX Export functionality
+  const handleExportXLSX = async () => {
+    try {
+      await refetchExport();
+
+      if (exportData?.data) {
+        // Format data for XLSX export based on table columns
+        const xlsxData = exportData.data.map((item: Menu) => ({
+          'Nama Menu': item.name,
+          'Kategori': item.category,
+          'Tanggal Ditambahkan': item.date,
+          'Gambar URL': item.image_url || 'No Image',
+        }));
+
+        // Create workbook and worksheet
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(xlsxData);
+
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Menu');
+
+        // Generate filename with current date
+        const filename = `menu-export-${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        // Save file
+        XLSX.writeFile(wb, filename);
+
+        message.success('Data exported successfully!');
+      }
+    } catch (error) {
+      message.error('Failed to export data');
+    }
+  };
+
   // Navigate to edit menu page
   const handleEditMenu = (id: string) => {
     router.push(`/admin/menu/tambah?id=${id}`);
   };
+
+
 
   // Table columns configuration
   const columns: ColumnsType<Menu> = [
@@ -154,9 +192,18 @@ export default function MenuPage() {
               <h1 className="text-[24px] font-[500]">Menu</h1>
             </div>
 
-            <Button type="primary" onClick={handleAddMenu}>
-              Tambah Menu
-            </Button>
+            <div className="flex gap-3">
+              <Button type="primary" onClick={handleAddMenu}>
+                Tambah Menu
+              </Button>
+              <Button 
+                type="default" 
+                onClick={handleExportXLSX}
+                loading={isExporting}
+              >
+                Export Excel
+              </Button>
+            </div>
           </div>
           <Row gutter={[16, 16]} className="mb-4">
             <Col xs={24} sm={12} md={8} lg={6}>

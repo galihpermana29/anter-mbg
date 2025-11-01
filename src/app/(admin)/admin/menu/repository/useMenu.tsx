@@ -44,4 +44,41 @@ export function useListMenu() {
   };
 }
 
+export function useExportMenu() {
+  const search = getUrlParams("search") || "";
+  const category = getUrlParams("category") || "";
+
+  const { data, isFetching, isError, error, refetch } = useQuery({
+    queryKey: [
+      {
+        key: "export-menu",
+        search,
+        category,
+      },
+    ],
+    queryFn: async ({ signal }) => {
+      const search = getUrlParams("search") || "";
+      const category = getUrlParams("category") || "";
+
+      const response = await fetchAPI<IListMenu>(
+        `/v1/kitchens/menus?limit=999&page=1&q=${search}&category=${category}`,
+        {
+          signal,
+        }
+      );
+
+      return response;
+    },
+    enabled: false, // Only run when manually triggered
+  });
+
+  return {
+    data,
+    isLoading: isFetching,
+    isError,
+    error,
+    refetch,
+  };
+}
+
 export default useListMenu;

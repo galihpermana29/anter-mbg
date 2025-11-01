@@ -43,4 +43,42 @@ const useLogSekolah = () => {
   };
 };
 
+export function useExportLogSekolah() {
+  const page = getUrlParams("page") || 1;
+  const search = getUrlParams("search") || "";
+  const schoolId = getUrlParams("id") || "";
+
+  const { data, isFetching, isError, error, refetch } = useQuery({
+    queryKey: [
+      {
+        key: "export-log-sekolah",
+        page,
+        search,
+        schoolId,
+      },
+    ],
+    queryFn: async ({ signal }) => {
+      const schoolId = getUrlParams("id") || "";
+
+      const response = await fetchAPI<IResponseLogSekolah>(
+        `/v1/schools/food-logs?limit=999&page=1&school_id=${schoolId}`,
+        {
+          signal,
+        }
+      );
+
+      return response;
+    },
+    enabled: false, // Only run when manually triggered
+  });
+
+  return {
+    data,
+    isLoading: isFetching,
+    isError,
+    error,
+    refetch,
+  };
+}
+
 export default useLogSekolah;

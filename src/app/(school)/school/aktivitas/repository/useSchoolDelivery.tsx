@@ -95,7 +95,8 @@ export function useSchoolLiveDelivery() {
     queryKey: [{ key: "liveDelivery", date, mode }],
     queryFn: async () => {
       // Build the query string
-      let queryString = `/v1/deliveries/live?mode=${mode}&date=${date}`;
+      const session = await getSessionClient();
+      let queryString = `/v1/deliveries/live?mode=${mode}&date=${date}&school_id=${session?.user?.school_id}`;
 
       return await fetchAPI<DeliveryListResponse>(queryString);
     },

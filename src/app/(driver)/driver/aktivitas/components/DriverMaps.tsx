@@ -52,7 +52,13 @@ const LocationMarker = ({
 
         // Publish initial location if we have an active order
         if (activeOrderId && driverId) {
+          console.log("DriverMaps - Publishing initial location");
           publishDriverLocation(newPosition, driverId, activeOrderId);
+        } else {
+          console.log("DriverMaps - Not publishing initial location:", {
+            activeOrderId,
+            driverId,
+          });
         }
       },
       (error) => {
@@ -99,8 +105,22 @@ const LocationMarker = ({
 
   // Update location publishing when location changes
   useEffect(() => {
+    console.log("DriverMaps - Location change effect:", {
+      location,
+      activeOrderId,
+      driverId,
+    });
     if (location && activeOrderId && driverId) {
+      console.log(
+        "DriverMaps - Calling publishDriverLocation from location change effect"
+      );
       publishDriverLocation(location, driverId, activeOrderId);
+    } else {
+      console.log("DriverMaps - Not publishing: missing", {
+        hasLocation: !!location,
+        hasActiveOrderId: !!activeOrderId,
+        hasDriverId: !!driverId,
+      });
     }
   }, [location, activeOrderId, driverId]);
 
@@ -137,7 +157,14 @@ const LocationMarker = ({
     orderId: string
   ) => {
     try {
-      await mqttService.publishLocation(orderId, {
+      console.log("DriverMaps - Publishing location:", {
+        position,
+        driverId,
+        orderId,
+        timestamp: Date.now(),
+      });
+
+      const locationData = {
         driverId,
         orderId,
         timestamp: Date.now(),
@@ -145,9 +172,17 @@ const LocationMarker = ({
           lat: position[0],
           lng: position[1],
         },
-      });
+      };
+
+      console.log("DriverMaps - Location data to publish:", locationData);
+
+      await mqttService.publishLocation(orderId, locationData);
+      console.log(
+        "DriverMaps - Successfully published location for orderId:",
+        orderId
+      );
     } catch (error) {
-      console.error("Failed to publish driver location:", error);
+      console.error("DriverMaps - Failed to publish driver location:", error);
     }
   };
 

@@ -142,12 +142,30 @@ class MQTTService {
     orderId: string,
     locationData: LocationData
   ): Promise<boolean> {
+    console.log("MQTT Service - publishLocation called:", {
+      orderId,
+      locationData,
+    });
+    console.log("MQTT Service - Client status for publish:", {
+      exists: !!this.client,
+      connected: this.client?.connected,
+      reconnecting: this.client?.reconnecting,
+    });
+
     return new Promise((resolve, reject) => {
       if (!this.client || !this.client.connected) {
+        console.log("MQTT Service - Client not connected, connecting first...");
         this.connect()
-          .then(() => this.doPublish(orderId, locationData, resolve, reject))
-          .catch((err) => reject(err));
+          .then(() => {
+            console.log("MQTT Service - Connected, now publishing...");
+            this.doPublish(orderId, locationData, resolve, reject);
+          })
+          .catch((err) => {
+            console.error("MQTT Service - Connection failed:", err);
+            reject(err);
+          });
       } else {
+        console.log("MQTT Service - Client connected, publishing directly...");
         this.doPublish(orderId, locationData, resolve, reject);
       }
     });
@@ -161,6 +179,7 @@ class MQTTService {
   ): void {
     try {
       if (!this.client) {
+        console.error("MQTT Service - doPublish: Client not initialized");
         reject(new Error("MQTT client not initialized"));
         return;
       }
@@ -168,17 +187,23 @@ class MQTTService {
       const topic = `${this.topicPrefix}/${orderId}/location`;
       const payload = JSON.stringify(locationData);
 
+      console.log("MQTT Service - Publishing to topic:", topic);
+      console.log("MQTT Service - Payload:", payload);
+
       this.client.publish(topic, payload, { qos: 1, retain: false }, (err) => {
         if (err) {
-          console.error("Failed to publish location:", err);
+          console.error("MQTT Service - Failed to publish location:", err);
           reject(err);
         } else {
-          console.log(`Location published to ${topic}`);
+          console.log(
+            `MQTT Service - Location successfully published to ${topic}`
+          );
+          console.log("MQTT Service - Published payload:", payload);
           resolve(true);
         }
       });
     } catch (error) {
-      console.error("Error publishing location:", error);
+      console.error("MQTT Service - Error in doPublish:", error);
       reject(error);
     }
   }
@@ -187,29 +212,80 @@ class MQTTService {
     orderId: string,
     callback: (data: LocationData) => void
   ): () => void {
+    console.log(
+      "MQTT Service - subscribeToDriverLocation called for orderId:",
+      orderId
+    );
+    console.log("MQTT Service - Client status:", {
+      exists: !!this.client,
+      connected: this.client?.connected,
+      reconnecting: this.client?.reconnecting,
+    });
+
     if (!this.client) {
+      console.log("MQTT Service - Client not initialized, connecting...");
       this.connect().catch(console.error);
+
+      // Wait for connection before proceeding
+      setTimeout(() => {
+        console.log(
+          "MQTT Service - Retrying subscription after connection attempt..."
+        );
+        this.subscribeToDriverLocation(orderId, callback);
+      }, 2000);
+
+      return () => {}; // Return empty unsubscribe function for now
     }
 
     const topic = `${this.topicPrefix}/${orderId}/location`;
+    console.log("MQTT Service - Subscribing to topic:", topic);
+    console.log("MQTT Service - Topic prefix:", this.topicPrefix);
 
-    const messageHandler = (topic: string, message: Buffer) => {
+    const messageHandler = (receivedTopic: string, message: Buffer) => {
       try {
-        console.log(message, "message");
+        console.log("MQTT Service - Message received on topic:", receivedTopic);
+        console.log("MQTT Service - Expected topic:", topic);
+        console.log("MQTT Service - Message content:", message.toString());
         const data = JSON.parse(message.toString()) as LocationData;
+        console.log("MQTT Service - Parsed data:", data);
         callback(data);
       } catch (error) {
-        console.error("Error parsing MQTT message:", error);
+        console.error("MQTT Service - Error parsing MQTT message:", error);
       }
     };
 
-    if (this.client) {
-      this.client.subscribe(topic, { qos: 1 });
+    if (this.client && this.client.connected) {
+      console.log("MQTT Service - Client connected, subscribing...");
+      this.client.subscribe(topic, { qos: 1 }, (err) => {
+        if (err) {
+          console.error("MQTT Service - Subscription error:", err);
+        } else {
+          console.log("MQTT Service - Successfully subscribed to:", topic);
+        }
+      });
       this.client.on("message", messageHandler);
+    } else if (this.client) {
+      console.log(
+        "MQTT Service - Client exists but not connected, waiting for connection..."
+      );
+      this.client.once("connect", () => {
+        console.log("MQTT Service - Client connected, now subscribing...");
+        this.client!.subscribe(topic, { qos: 1 }, (err) => {
+          if (err) {
+            console.error("MQTT Service - Subscription error:", err);
+          } else {
+            console.log("MQTT Service - Successfully subscribed to:", topic);
+          }
+        });
+        this.client!.on("message", messageHandler);
+      });
+    } else {
+      console.error("MQTT Service - Client is null, cannot subscribe");
     }
 
     // Return unsubscribe function
     return () => {
+      console.log("MQTT Service - Unsubscribing from topic:", topic);
       if (this.client) {
         this.client.unsubscribe(topic);
         this.client.removeListener("message", messageHandler);

@@ -30,28 +30,73 @@ const DriverLocationMarker = ({ orderId }: { orderId: string }) => {
     driverId: string;
     timestamp: number;
   } | null>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    if (!orderId) return;
+    console.log("KitchenMap DriverLocationMarker - orderId:", orderId);
+    if (!orderId) {
+      console.log("KitchenMap - No orderId provided, skipping subscription");
+      return;
+    }
 
     // Subscribe to driver location updates
-    const unsubscribe = mqttService.subscribeToDriverLocation(
-      orderId,
-      (data) => {
-        console.log("Received driver location:", data);
-        if (data && data.location) {
-          setDriverPosition([data.location.lat, data.location.lng]);
-          setDriverInfo({
-            driverId: data.driverId,
-            timestamp: data.timestamp,
-          });
+    const subscribeToDriverLocation = async () => {
+      try {
+        console.log("KitchenMap - Starting subscription for orderId:", orderId);
+        // Unsubscribe from previous subscription if exists
+        if (unsubscribeRef.current) {
+          console.log("KitchenMap - Cleaning up previous subscription");
+          unsubscribeRef.current();
+          unsubscribeRef.current = null;
         }
+
+        // Subscribe to new topic
+        console.log(
+          "KitchenMap - Calling mqttService.subscribeToDriverLocation"
+        );
+        const unsubscribe = mqttService.subscribeToDriverLocation(
+          orderId,
+          (data) => {
+            console.log("KitchenMap - Received MQTT data:", data);
+            if (
+              data &&
+              data.location &&
+              data.location.lat &&
+              data.location.lng
+            ) {
+              console.log("KitchenMap - Setting driver position:", [
+                data.location.lat,
+                data.location.lng,
+              ]);
+              setDriverPosition([data.location.lat, data.location.lng]);
+              setDriverInfo({
+                driverId: data.driverId,
+                timestamp: data.timestamp,
+              });
+            } else {
+              console.log("KitchenMap - Invalid data structure:", data);
+            }
+          }
+        );
+
+        unsubscribeRef.current = unsubscribe;
+        console.log("KitchenMap - Subscription setup complete");
+      } catch (error) {
+        console.error(
+          "KitchenMap - Error subscribing to driver location:",
+          error
+        );
       }
-    );
+    };
+
+    subscribeToDriverLocation();
 
     return () => {
-      // Unsubscribe when component unmounts
-      unsubscribe();
+      console.log("KitchenMap - Cleanup: unsubscribing from MQTT");
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
+      }
     };
   }, [orderId]);
 
@@ -231,7 +276,16 @@ const KitchenMap = ({ orderData, isLoading }: KitchenMapProps) => {
         {schoolPosition && <RecenterMap position={schoolPosition} />}
 
         {/* Driver's live location from MQTT */}
-        {orderData && <DriverLocationMarker orderId={orderData.order_id} />}
+        {orderData && (
+          <>
+            {console.log(
+              "KitchenMap - Rendering DriverLocationMarker with orderData:",
+              orderData
+            )}
+            {console.log("KitchenMap - order_id:", orderData.order_id)}
+            <DriverLocationMarker orderId={orderData.order_id} />
+          </>
+        )}
 
         {/* School marker */}
         {schoolPosition && (
